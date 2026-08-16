@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { GAME_FEEL, GAME_SIZE } from '@/game/constants';
 import { JumpController } from '@/game/systems/JumpController';
 import { InputSystem } from '@/game/systems/InputSystem';
+import { LEVEL_1_1 } from '@/game/levels/level-1-1';
+import type { PlatformSpec } from '@/game/levels/reach';
 
-const GROUND_Y = GAME_SIZE.height - 40;
 const PLAYER_TEXTURE = 'player-rect';
 
 export class LevelScene extends Phaser.Scene {
@@ -20,19 +21,17 @@ export class LevelScene extends Phaser.Scene {
     this.ensurePlayerTexture();
 
     const platforms = this.physics.add.staticGroup();
-    this.addPlatform(platforms, 480, GROUND_Y, 700, 40);
-    this.addPlatform(platforms, 1250, GROUND_Y, 500, 40);
-    this.addPlatform(platforms, 900, GROUND_Y - 150, 160, 24);
-    this.addPlatform(platforms, 1150, GROUND_Y - 280, 160, 24);
+    for (const spec of LEVEL_1_1.platforms) this.addPlatform(platforms, spec);
 
-    this.player = this.physics.add.sprite(120, GROUND_Y - 120, PLAYER_TEXTURE);
+    const { spawn, worldWidth } = LEVEL_1_1;
+    this.player = this.physics.add.sprite(spawn.x, spawn.y, PLAYER_TEXTURE);
     this.player.setDisplaySize(32, 48);
     this.player.setTintFill(0x6ee7ff);
     this.player.setCollideWorldBounds(false);
     this.physics.add.collider(this.player, platforms);
 
-    this.physics.world.setBounds(0, 0, 1600, GAME_SIZE.height);
-    this.cameras.main.setBounds(0, 0, 1600, GAME_SIZE.height);
+    this.physics.world.setBounds(0, 0, worldWidth, GAME_SIZE.height);
+    this.cameras.main.setBounds(0, 0, worldWidth, GAME_SIZE.height);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setFollowOffset(-80, 0);
 
@@ -43,12 +42,15 @@ export class LevelScene extends Phaser.Scene {
   /** Retângulo estático simples — sem textura, só cor. */
   private addPlatform(
     group: Phaser.Physics.Arcade.StaticGroup,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
+    spec: PlatformSpec,
   ): void {
-    const rect = this.add.rectangle(x, y, width, height, 0x2b3a67);
+    const rect = this.add.rectangle(
+      spec.x,
+      spec.y,
+      spec.width,
+      spec.height,
+      0x2b3a67,
+    );
     group.add(rect);
   }
 
@@ -88,7 +90,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private respawn(): void {
-    this.player.setPosition(120, GROUND_Y - 120);
+    this.player.setPosition(LEVEL_1_1.spawn.x, LEVEL_1_1.spawn.y);
     this.player.setVelocity(0, 0);
     this.jump.reset();
   }
