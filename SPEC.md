@@ -338,8 +338,8 @@ fora da gameplay — nada de poluir a tela durante a fase:
 É texto em React na shell, então são poucos minutos de trabalho. Fica em
 `src/app/Menu/`.
 
-⚠️ Confirmar com Junior e Ana: nome completo dos dois e o nome oficial da
-escola (Pinheirinho está por confirmar) antes de fechar a versão final.
+⚠️ Confirmar com Junior e Ana: nome completo dos dois antes de fechar a versão
+final.
 
 ---
 
@@ -366,7 +366,7 @@ separadamente, senão apertar pulo cancela o movimento.
 | Estado | **Zustand** | progresso/estrelas compartilhados entre React e Phaser (padrão do seu plugin) |
 | PWA | **vite-plugin-pwa** | gera manifest + service worker, zero config manual |
 | Persistência | **localStorage** (Zustand `persist`) | sem backend. Sem backend = deploy trivial |
-| Níveis | **Tiled** (editor gratuito) | exporta JSON que o Phaser lê nativamente |
+| Níveis | **arquivo TypeScript** (`src/game/levels/`) | ver "Por que não Tiled" abaixo |
 | Arte (cenário) | **Kenney.nl** (CC0) | tiles e props de plataforma, uso livre, recoloríveis para os cenários brasileiros |
 | Arte (personagens e guardiões) | **Piskel** ou **Aseprite** (feita à mão) | Ana, Junior de uniforme e o folclore não existem em pack pronto — ver seção 5b |
 | Áudio | Kenney Audio + jsfxr | mesma licença livre |
@@ -381,6 +381,15 @@ E adicionar backend **custaria** o offline: hoje o service worker faz precache e
 o jogo abre sem internet; com API, a tela de fases passaria a depender de rede
 justamente no dia da apresentação. Somando LGPD sobre dados de menores, a conta
 não fecha. Se depois quiserem ranking, entra uma API minúscula — mas não antes.
+
+**Por que não Tiled.** A fase 1-1 nasceu com uma plataforma 6 px acima do alcance
+máximo do pulo — impossível de pisar, e ninguém percebeu até jogar. A correção
+foi transformar a fase em **dado TypeScript** (`levels/level-1-1.ts`) e derivar
+os limites de level design do `GAME_FEEL` (`levels/reach.ts`): o teste percorre
+a fase em busca em largura e falha se alguma plataforma ficar fora do alcance.
+Esse teste é a rede de segurança mais valiosa do projeto e **um JSON do Tiled a
+perderia**. Tiled volta a fazer sentido quando a fase tiver dezenas de tiles
+decorativos; até lá, um array de retângulos que o CI verifica ganha.
 
 **Divisão React ↔ Phaser:** React desenha tudo que é *interface* (menu, seleção
 de fase, HUD, card da conta, tela de vitória). Phaser desenha só o *canvas do
@@ -438,10 +447,10 @@ Cada fase termina com algo jogável — nunca fique 3 dias sem conseguir rodar.
 |---|---|---|
 | 0 | Setup Vite + React + Phaser + PWA | Canvas azul abre no celular |
 | 1 | **Vertical slice**: correr e pular num cenário fixo | O pulo está gostoso (coyote + buffer + variável) |
-| 2 | Tilemap do Tiled + colisão + câmera + checkpoint | Dá pra percorrer uma fase inteira |
+| 2 | **Identidade visual**: paleta única, retratos SVG, tela de título, uniforme no jogo, cenário do Quintal | A tela inicial está bonita e o personagem parece o Junior / a Ana |
 | 3 | `mathEngine` + card da conta + mecanismo Ponte | Uma conta abaixa uma ponte de verdade |
-| 4 | Mecanismo Blocos + dígitos dourados + HUD (corações e estrelas) | Fase 1-1 completa, do início ao fim |
-| 5 | **Monstro Slime Somador**: confronto, golpe, dano, válvula anti-frustração | Dá pra derrotar um monstro acertando a conta |
+| 4 | Mecanismo Blocos + dígitos dourados + HUD (corações e estrelas) + checkpoint | Fase 1-1 completa, do início ao fim |
+| 5 | **Guardião Saci-Pererê**: confronto, golpe, dano, válvula anti-frustração | Dá pra derrotar um guardião acertando a conta |
 | 6 | Fases 1-2 a 1-5 + áudio + partículas + menu + **cabeçalho/créditos** | **Mundo 1 fechado — versão entregável** |
 | 7 | Deploy VPS + HTTPS + teste de instalação no celular | Instala como app no celular do Junior e da Ana |
 | 8 | *(extra)* Mundos 2–5 + chefe Guardião de Euclides | Só se sobrar tempo |
@@ -462,5 +471,4 @@ conteúdo. Se estiver ruim, nenhuma quantidade de fases salva.
 ## Pendências
 
 1. **Nome completo do Junior e da Ana** para o cabeçalho e os créditos.
-2. **Nome oficial da escola** — "Escola Pinheirinho" está por confirmar.
-3. Série/idade da turma alvo, para calibrar os tiers do gerador de contas.
+2. Série/idade da turma alvo, para calibrar os tiers do gerador de contas.
