@@ -18,6 +18,7 @@ import { useRunStore } from '@/store/useRunStore';
 import { useChallengeStore } from '@/store/useChallengeStore';
 import type { ChallengeOutcome } from '@/store/useChallengeStore.types';
 import { shouldHandleOutcome } from './challengeOutcome';
+import { playSfx } from '@/game/audio/audio';
 
 /** Tempo que a porta leva para abrir antes de a tela de resultado subir. */
 const DOOR_MS = 620;
@@ -138,22 +139,28 @@ export class LevelScene extends Phaser.Scene {
 
   private applyOutcome(outcome: ChallengeOutcome): void {
     if (!outcome.correct) {
+      playSfx('errado');
       this.cameras.main.shake(140, 0.005);
       useRunStore.getState().addError();
       return;
     }
+
+    playSfx('certo');
 
     // Mecanismo primeiro: se o setText do painel explodir numa cena
     // destruída, a ponte da cena viva ainda precisa descer.
     const mechanism = this.level.mechanisms.find((item) => item.id === outcome.source);
     switch (mechanism?.kind) {
       case 'ponte':
+        playSfx('ponte');
         this.bridges.get(mechanism.id)?.lower();
         break;
       case 'blocos':
+        playSfx('blocos');
         this.blocks.get(mechanism.id)?.raise(outcome.answer);
         break;
       case 'porta':
+        playSfx('porta');
         this.time.delayedCall(DOOR_MS, () => useRunStore.getState().finish());
         break;
     }
@@ -187,11 +194,15 @@ export class LevelScene extends Phaser.Scene {
     }
 
     for (const digit of this.digits) {
-      if (digit.tryCollect(this.player.x, this.player.y)) useRunStore.getState().takeDigit();
+      if (digit.tryCollect(this.player.x, this.player.y)) {
+        playSfx('moeda');
+        useRunStore.getState().takeDigit();
+      }
     }
 
     for (const flag of this.checkpoints) {
       if (flag.tryActivate(this.player.x, this.player.y)) {
+        playSfx('bandeira');
         this.spawnPoint = { x: flag.at.x, y: flag.at.y - 40 };
       }
     }
@@ -214,6 +225,7 @@ export class LevelScene extends Phaser.Scene {
     );
 
     if (command.type === 'start') {
+      playSfx('pulo');
       this.player.setVelocityY(GAME_FEEL.jumpVelocity);
     } else if (command.type === 'cut') {
       this.player.setVelocityY(body.velocity.y * GAME_FEEL.jumpCutMultiplier);

@@ -42,4 +42,10 @@ export const styles = {
     cursor: 'pointer',
     pointerEvents: 'auto',
   },
+  sound: {
+    ...pill,
+    padding: '0.3rem 0.6rem',
+    cursor: 'pointer',
+    pointerEvents: 'auto',
+  },
 } satisfies Record<string, CSSProperties>;

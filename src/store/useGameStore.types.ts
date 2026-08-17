@@ -27,4 +27,6 @@ export type GameState = {
   setCharacter: (id: CharacterId) => void;
   setMode: (mode: GameMode) => void;
   resetProgress: () => void;
+  muted: boolean;
+  toggleMuted: () => void;
 };

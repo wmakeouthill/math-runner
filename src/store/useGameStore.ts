@@ -48,6 +48,10 @@ export const useGameStore = create<GameState>()(
       setMode: (mode) => set({ mode }),
 
       resetProgress: () => set({ progress: {}, currentLevel: null }),
+
+      muted: false,
+
+      toggleMuted: () => set((state) => ({ muted: !state.muted })),
     }),
     {
       name: 'math-runner-progress',
@@ -56,6 +60,7 @@ export const useGameStore = create<GameState>()(
         progress: state.progress,
         character: state.character,
         mode: state.mode,
+        muted: state.muted,
       }),
     },
   ),

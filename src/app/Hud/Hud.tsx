@@ -21,6 +21,8 @@ function useElapsed(startedAt: number, running: boolean): number {
 
 export function Hud() {
   const goToScreen = useGameStore((state) => state.goToScreen);
+  const muted = useGameStore((state) => state.muted);
+  const toggleMuted = useGameStore((state) => state.toggleMuted);
   const levelId = useGameStore((state) => state.currentLevel);
   const digitsTaken = useRunStore((state) => state.digitsTaken);
   const digitsTotal = useRunStore((state) => state.digitsTotal);
@@ -42,6 +44,14 @@ export function Hud() {
       </span>
       {errors > 0 && <span style={styles.errors}>✗ {errors}</span>}
       <span style={styles.time}>{formatTime(result?.timeMs ?? elapsed)}</span>
+      <button
+        type="button"
+        style={styles.sound}
+        aria-label={muted ? 'Ligar o som' : 'Desligar o som'}
+        onClick={toggleMuted}
+      >
+        {muted ? '🔇' : '🔊'}
+      </button>
     </div>
   );
 }
