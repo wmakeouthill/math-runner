@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath, URL } from 'node:url';
+import { PWA_LAUNCH } from './src/platform/pwaManifest.js';
 
 export default defineConfig({
   plugins: [
@@ -22,10 +23,7 @@ export default defineConfig({
         description:
           'Jogo de plataforma 2D onde você resolve contas para destravar o caminho.',
         lang: 'pt-BR',
-        start_url: '/',
-        scope: '/',
-        display: 'fullscreen',
-        orientation: 'landscape',
+        ...PWA_LAUNCH,
         background_color: '#0b1020',
         theme_color: '#0b1020',
         icons: [
