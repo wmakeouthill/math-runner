@@ -3,9 +3,9 @@
 > **Para quem executa:** implemente uma tarefa por vez, na ordem. Cada tarefa
 > termina com teste rodando e commit. Pare no fim de cada tarefa para revisão.
 
-**Goal:** dar áudio, partículas e uma comemoração de fim de fase ao jogo, deixar
-a dificuldade das contas se adaptar ao aluno e trazer o Guardião Saci-Pererê
-para o modo Aventura.
+**Goal:** fechar o Mundo 1 em cinco fases com as quatro operações, dar áudio,
+partículas e uma comemoração de fim de fase, um mecanismo de voo, dificuldade
+que se adapta ao aluno e o Guardião Saci-Pererê no modo Aventura.
 
 **Architecture:** o áudio é sintetizado em WebAudio na hora (nenhum arquivo de
 som no repositório, nada para licenciar, precache do PWA continua leve). As
@@ -1143,7 +1143,672 @@ git commit -m "feat: guardiao saci-perere no modo aventura com coracoes"
 
 ---
 
-### Task 6: SPEC em dia e verificação manual
+### Task 6: Teto na escada de blocos
+
+**Isto é conserto de bug, não enfeite.** A escada sobe um bloco por unidade da
+resposta. Hoje `blocos-1` na 1-2 é `+` tier 1, então a resposta chega a 20 — uma
+escada de 800 px de altura e 880 px de largura, que atravessa o terraço e sai da
+tela. Com a dificuldade adaptativa da Tarefa 4 isso vira tier 3: `99 + 99 = 198`
+degraus, quase 8000 px. A fase deixa de fazer sentido.
+
+O piso já está resolvido (`MIN_ANSWER` garante 2 degraus no mínimo). Falta o teto.
+
+**Files:**
+- Modify: `src/game/levels/reach.ts`
+- Test: `tests/game/reach.test.ts`
+
+**Interfaces:**
+- Produz: `MAX_BLOCK_STEPS`, `blockStair` limitado.
+
+- [ ] **Step 1: Escreva os testes que falham**
+
+Acrescente em `tests/game/reach.test.ts`:
+
+```ts
+import { MAX_BLOCK_STEPS, blockStair, BLOCK } from '@/game/levels/reach';
+import { MIN_ANSWER } from '@/game/math/mathEngine';
+
+describe('teto da escada de blocos', () => {
+  it('uma resposta enorme não constrói uma escada infinita', () => {
+    expect(blockStair({ x: 0, y: 500 }, 198)).toHaveLength(MAX_BLOCK_STEPS);
+  });
+
+  it('respostas pequenas continuam valendo degrau a degrau', () => {
+    expect(blockStair({ x: 0, y: 500 }, 3)).toHaveLength(3);
+  });
+
+  it('mesmo no teto, cada degrau continua pulável', () => {
+    const steps = blockStair({ x: 0, y: 500 }, 99);
+    expect(BLOCK.stepY).toBeLessThanOrEqual(SAFE_STEP);
+    expect(BLOCK.stepX - BLOCK.size).toBeLessThanOrEqual(SAFE_GAP);
+    expect(steps.length).toBeGreaterThan(1);
+  });
+});
+
+describe.each(LEVEL_ORDER)('fase $id — blocos', (level) => {
+  /**
+   * `-` pode dar 0 e `*` e `/` podem dar 1: escada de zero ou um degrau não
+   * sobe em lugar nenhum. Blocos só aceita operação cuja menor resposta
+   * possível já seja um degrau de verdade.
+   */
+  it('a escada de blocos só usa operação que garante 2 degraus', () => {
+    for (const mechanism of level.mechanisms) {
+      if (mechanism.kind !== 'blocos') continue;
+      expect(MIN_ANSWER[mechanism.op]).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
+```
+
+- [ ] **Step 2: Rode e veja falhar**
+
+```bash
+npx vitest run tests/game/reach.test.ts
+```
+
+Esperado: FAIL no primeiro teste — hoje `blockStair` devolve 198 degraus.
+
+- [ ] **Step 3: Ponha o teto**
+
+Em `src/game/levels/reach.ts`, acima de `blockStair`:
+
+```ts
+/**
+ * Teto da escada. A resposta vira degrau até aqui; passou disso, a escada para
+ * de crescer. Sem teto, um `99 + 99` no tier 3 constrói 198 degraus e quase
+ * 8000 px de escada atravessando a fase inteira.
+ */
+export const MAX_BLOCK_STEPS = 8;
+```
+
+e a primeira linha de `blockStair`:
+
+```ts
+export function blockStair(origin: Point, count: number): PlatformSpec[] {
+  const total = Math.min(count, MAX_BLOCK_STEPS);
+  const steps: PlatformSpec[] = [];
+  for (let i = 0; i < total; i += 1) {
+```
+
+(o resto do corpo não muda).
+
+- [ ] **Step 4: Rode e comite**
+
+```bash
+npx vitest run
+git add src/game/levels/reach.ts tests/game/reach.test.ts
+git commit -m "fix: escada de blocos para de crescer no oitavo degrau"
+```
+
+---
+
+### Task 7: As quatro operações espalhadas pelas fases
+
+Hoje **todos** os sete mecanismos das três fases usam `+`. O motor de contas já
+sabe fazer `−`, `×` e `÷` (com subtração nunca negativa e divisão sempre exata),
+e a tela de conta já mostra o símbolo certo — só ninguém pediu ainda.
+
+Os números de cada conta já são sorteados a cada partida; o que a fase fixa é
+**qual operação** aquele mecanismo cobra. Isso é de propósito: se a operação
+sorteasse junto, uma escada de blocos podia cair num `−` com resposta 0 e travar
+a fase. Operação é level design, número é sorteio.
+
+**Files:**
+- Modify: `src/game/levels/level-1-2.ts`, `level-1-3.ts`
+
+- [ ] **Step 1: Distribua as operações**
+
+`level-1-1.ts` **não muda** — é o tutorial, e tutorial ensina uma coisa de cada vez.
+
+Em `level-1-2.ts`, o `porta-1-2` passa a cobrar subtração:
+
+```ts
+    {
+      kind: 'porta',
+      id: 'porta-1-2',
+      op: '-',
+      tier: 1,
+      panel: { x: 2400, y: 450 },
+    },
+```
+
+(o `blocos-1` continua `+` — é a regra da Tarefa 6.)
+
+Em `level-1-3.ts`: `ponte-1-3` vira `op: '-', tier: 2`, `blocos-1-3` continua
+`op: '+', tier: 2`, e `porta-1-3` vira `op: '*', tier: 1`.
+
+Os guardiões da Tarefa 5 também: `saci-1-3` vira `op: '*', tier: 1` e
+`saci-1-3b` vira `op: '/', tier: 1`.
+
+> Tabuada e divisão entram no tier 1 (até 5×5, divisão exata) mesmo numa fase
+> tier 2 de soma. Multiplicar é mais novo para a criança que somar; começar a
+> tabuada no tier 2 é pedir 10×10 para quem acabou de aprender 3×4.
+
+- [ ] **Step 2: Rode o teste de alcance**
+
+```bash
+npx vitest run tests/game/reach.test.ts
+```
+
+Esperado: PASS — inclusive a regra nova "blocos só com operação de 2 degraus".
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/game/levels
+git commit -m "feat: subtracao, multiplicacao e divisao espalhadas pelas fases"
+```
+
+---
+
+### Task 8: Ventania — acertar a conta faz o boneco voar
+
+O Saci anda com redemoinho. Acertar a conta do painel de ventania abre um
+redemoinho no chão; entrando nele e segurando o pulo, o jogador sobe por **2,2
+segundos** e alcança uma plataforma que o pulo normal nunca alcançaria.
+
+O redemoinho **não some** depois de usado: se o tempo acabar no meio da subida,
+é só voltar e entrar de novo. Voo com uma chance só vira jogo de reflexo, e este
+é um jogo de conta.
+
+**Files:**
+- Modify: `src/game/levels/reach.ts`
+- Create: `src/game/mechanisms/Whirlwind.ts`
+- Modify: `src/game/systems/InputSystem.ts`
+- Modify: `src/game/scenes/LevelScene.ts`
+- Test: `tests/game/reach.test.ts`
+
+**Interfaces:**
+- Produz: `MechanismEffect` com `{ kind: 'ventania'; origin: Point }`,
+  `FLIGHT`, `FLIGHT_STEP`, `FLIGHT_GAP`, `canReach(from, to, flying?)`,
+  classe `Whirlwind`.
+
+- [ ] **Step 1: Escreva o teste que falha**
+
+Em `tests/game/reach.test.ts`:
+
+```ts
+import { FLIGHT_STEP, FLIGHT_GAP, canReach, SAFE_STEP } from '@/game/levels/reach';
+
+describe('voo da ventania', () => {
+  const chao = { x: 500, y: 500, width: 600, height: 40 };
+  const altissima = { x: 1200, y: 220, width: 400, height: 40 };
+
+  it('a plataforma alta é impossível de pulo', () => {
+    expect(canReach(chao, altissima)).toBe(false);
+  });
+
+  it('e possível voando', () => {
+    expect(canReach(chao, altissima, true)).toBe(true);
+  });
+
+  it('voar alcança mais que pular, mas não alcança tudo', () => {
+    expect(FLIGHT_STEP).toBeGreaterThan(SAFE_STEP);
+    const lua = { x: 1200, y: -900, width: 400, height: 40 };
+    expect(canReach(chao, lua, true)).toBe(false);
+  });
+
+  it('o vão horizontal também cresce, mas tem limite', () => {
+    const longe = { x: 500 + 300 + FLIGHT_GAP + 200, y: 500, width: 600, height: 40 };
+    expect(canReach(chao, longe, true)).toBe(false);
+  });
+});
+```
+
+- [ ] **Step 2: Rode e veja falhar**
+
+```bash
+npx vitest run tests/game/reach.test.ts
+```
+
+Esperado: FAIL, `FLIGHT_STEP` não existe.
+
+- [ ] **Step 3: Ensine o teste de alcance a voar**
+
+Em `src/game/levels/reach.ts`, logo abaixo de `SAFE_GAP`:
+
+```ts
+/**
+ * A ventania: quanto tempo o redemoinho sustenta o jogador e com que força.
+ * Curto de propósito — 2,2 s é "alguns segundos" para quem está jogando e
+ * ainda é um número que o level design consegue prever.
+ */
+export const FLIGHT = { ms: 2200, riseSpeed: 220 } as const;
+
+const flightSeconds = FLIGHT.ms / 1000;
+
+/** Subida máxima usando a ventania, com a mesma margem de 70% do pulo. */
+export const FLIGHT_STEP = flightSeconds * FLIGHT.riseSpeed * JUMP_REACH.safety;
+
+/** Avanço horizontal máximo enquanto se voa. */
+export const FLIGHT_GAP = flightSeconds * GAME_FEEL.moveSpeed * JUMP_REACH.safety;
+```
+
+Troque `canReach` por:
+
+```ts
+/** Dá para ir de `from` até `to`? `flying` = saindo de dentro de uma ventania. */
+export function canReach(from: PlatformSpec, to: PlatformSpec, flying = false): boolean {
+  const rise = topOf(from) - topOf(to);
+  if (rise > (flying ? FLIGHT_STEP : SAFE_STEP)) return false;
+  return horizontalGap(from, to) <= (flying ? FLIGHT_GAP : SAFE_GAP);
+}
+```
+
+Acrescente o tipo ao `MechanismEffect`:
+
+```ts
+  | { kind: 'ventania'; origin: Point }
+```
+
+e o caso em `mechanismPlatforms` — a ventania não constrói plataforma nenhuma,
+ela muda o alcance:
+
+```ts
+    case 'ventania': return [];
+```
+
+Antes de `reachablePlatforms`, acrescente:
+
+```ts
+/** Índices das plataformas que hospedam um redemoinho. */
+function flightPlatforms(level: LevelSpec): ReadonlySet<number> {
+  const platforms = allPlatforms(level);
+  const hosts = new Set<number>();
+
+  for (const mechanism of level.mechanisms) {
+    if (mechanism.kind !== 'ventania') continue;
+    const index = platforms.findIndex(
+      (p) => leftOf(p) <= mechanism.origin.x && mechanism.origin.x <= rightOf(p),
+    );
+    if (index !== -1) hosts.add(index);
+  }
+
+  return hosts;
+}
+```
+
+e dentro de `reachablePlatforms`, depois de `const platforms = allPlatforms(level);`:
+
+```ts
+  const flying = flightPlatforms(level);
+```
+
+trocando a linha do `forEach` por:
+
+```ts
+      if (reached.has(index) || !canReach(from, to, flying.has(current))) return;
+```
+
+> O modelo é honesto e conservador: o voo vale para **um salto**, saindo da
+> plataforma onde o redemoinho está. Depois de pousar lá em cima, o jogador
+> anda e pula como sempre.
+
+- [ ] **Step 4: Rode e veja passar**
+
+```bash
+npx vitest run tests/game/reach.test.ts
+```
+
+- [ ] **Step 5: Desenhe o redemoinho**
+
+`src/game/mechanisms/Whirlwind.ts`:
+
+```ts
+import Phaser from 'phaser';
+import { PALETTE, toPhaserColor } from '@/theme/palette';
+import { FLIGHT } from '@/game/levels/reach';
+import type { Point } from '@/game/levels/reach';
+
+const WIDTH = 84;
+const HEIGHT = 150;
+
+/**
+ * O redemoinho do Saci. Nasce fechado e só abre quando a conta é acertada;
+ * a partir daí fica lá para sempre — entrar de novo renova o tempo de voo.
+ */
+export class Whirlwind {
+  readonly at: Point;
+  private readonly scene: Phaser.Scene;
+  private readonly funnel: Phaser.GameObjects.Container;
+  private open = false;
+
+  constructor(scene: Phaser.Scene, at: Point) {
+    this.scene = scene;
+    this.at = at;
+
+    const folhas = [0, 1, 2].map((i) =>
+      scene.add.ellipse(0, -30 - i * 42, 62 - i * 14, 16, toPhaserColor(PALETTE.dirt), 0.75),
+    );
+    const base = scene.add.ellipse(0, 4, 74, 20, toPhaserColor(PALETTE.faint), 0.5);
+
+    this.funnel = scene.add.container(at.x, at.y, [base, ...folhas]);
+    this.funnel.setAlpha(0);
+
+    for (const [i, folha] of folhas.entries()) {
+      scene.tweens.add({
+        targets: folha,
+        scaleX: 0.45,
+        duration: 520 + i * 90,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+  }
+
+  /** A conta certa abre o redemoinho. */
+  release(): void {
+    if (this.open) return;
+    this.open = true;
+    this.scene.tweens.add({ targets: this.funnel, alpha: 1, duration: 320 });
+  }
+
+  /** O jogador está dentro da coluna de vento? */
+  holds(playerX: number, playerY: number): boolean {
+    return (
+      this.open &&
+      Math.abs(playerX - this.at.x) < WIDTH / 2 &&
+      playerY > this.at.y - HEIGHT &&
+      playerY < this.at.y + 40
+    );
+  }
+
+  static get durationMs(): number {
+    return FLIGHT.ms;
+  }
+}
+```
+
+- [ ] **Step 6: Ligue o voo na cena**
+
+Em `LevelScene`, os campos:
+
+```ts
+  private readonly winds = new Map<string, Whirlwind>();
+  /** Timestamp em que a ventania para de sustentar o jogador. */
+  private flightUntil = 0;
+```
+
+no `create()`, junto dos outros `clear()`: `this.winds.clear(); this.flightUntil = 0;`
+e, no laço que monta os mecanismos, o caso novo:
+
+```ts
+      if (mechanism.kind === 'ventania') {
+        this.winds.set(mechanism.id, new Whirlwind(this, mechanism.origin));
+      }
+```
+
+no `switch` do `applyOutcome`, junto dos outros:
+
+```ts
+      case 'ventania':
+        playSfx('blocos');
+        this.winds.get(mechanism.id)?.release();
+        break;
+```
+
+- [ ] **Step 6b: O InputSystem precisa saber que a tecla está segurada**
+
+Hoje o `InputState` só tem `jumpJustPressed` e `jumpJustReleased` — o instante
+do aperto e o da soltura. Voar precisa do estado no meio: a tecla **segurada**.
+
+Em `src/game/systems/InputSystem.ts`, acrescente ao tipo `InputState`:
+
+```ts
+  /** Tecla de pulo segurada agora. É o que sustenta o voo na ventania. */
+  jumpHeld: boolean;
+```
+
+e ao objeto devolvido por `read()`, junto dos outros campos de pulo:
+
+```ts
+      jumpHeld: jumpKeys.some((key) => key.isDown) || this.isTouching('jump'),
+```
+
+- [ ] **Step 6c: Sustente o voo no update**
+
+No `update()` do `LevelScene`, **depois** do `const command = ...` do pulo e
+antes de aplicar o movimento horizontal:
+
+```ts
+    // Dentro do redemoinho o relógio do voo reinicia; fora dele, o que sobrou
+    // ainda vale — quem sai voando não cai no meio do caminho.
+    for (const wind of this.winds.values()) {
+      if (wind.holds(this.player.x, this.player.y)) {
+        this.flightUntil = this.time.now + Whirlwind.durationMs;
+        break;
+      }
+    }
+
+    if (this.time.now < this.flightUntil && input.jumpHeld) {
+      this.player.setVelocityY(-FLIGHT.riseSpeed);
+    }
+```
+
+> Use a variável que o `update()` já tem do `this.controls.read()` — **não**
+> chame `read()` uma segunda vez no mesmo frame: ele consome os eventos de
+> toque, e a segunda chamada devolveria um pulo fantasma.
+
+- [ ] **Step 7: Rode**
+
+```bash
+npx tsc -b
+npx oxlint src tests
+npx vitest run
+```
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add src/game tests/game/reach.test.ts
+git commit -m "feat: ventania do saci - acertar a conta libera alguns segundos de voo"
+```
+
+---
+
+### Task 9: Fases 1-4 e 1-5
+
+Fecham o Mundo 1 em cinco fases. A 1-4 apresenta a ventania; a 1-5 é a mais
+longa e junta tudo: blocos, ponte, ventania, porta, dois guardiões e as quatro
+operações.
+
+**Files:**
+- Create: `src/game/levels/level-1-4.ts`, `src/game/levels/level-1-5.ts`
+- Modify: `src/game/levels/index.ts`
+
+- [ ] **Step 1: Escreva a 1-4**
+
+`src/game/levels/level-1-4.ts`:
+
+```ts
+import type { LevelSpec } from './reach';
+
+const GROUND_Y = 500;
+
+/**
+ * Quadra Coberta: a fase da ventania.
+ *
+ * A plataforma alta está 280 px acima do chão — o pulo alcança 136 e a escada
+ * de blocos não chega lá. Só o redemoinho sobe isso.
+ */
+export const LEVEL_1_4: LevelSpec = {
+  id: '1-4',
+  name: 'Quadra Coberta',
+  spawn: { x: 220, y: GROUND_Y - 140 },
+  worldWidth: 3400,
+  platforms: [
+    // chão inicial. 130 … 900
+    { x: 515, y: GROUND_Y, width: 770, height: 40 },
+    // chão do meio. 1240 … 1900
+    { x: 1570, y: GROUND_Y, width: 660, height: 40 },
+    // laje da quadra. 2000 … 2600, 280 px acima — só voando
+    { x: 2300, y: GROUND_Y - 280, width: 600, height: 40 },
+    // chão final. 2700 … 3300
+    { x: 3000, y: GROUND_Y, width: 600, height: 40 },
+  ],
+  mechanisms: [
+    {
+      kind: 'ponte',
+      id: 'ponte-1-4',
+      op: '-',
+      tier: 1,
+      panel: { x: 700, y: 450 },
+      // 940 … 1180, quebra o vão de 340 px em dois saltos curtos
+      platform: { x: 1060, y: 490, width: 240, height: 20 },
+    },
+    {
+      kind: 'ventania',
+      id: 'vento-1-4',
+      op: '*',
+      tier: 1,
+      panel: { x: 1400, y: 450 },
+      origin: { x: 1800, y: GROUND_Y - 20 },
+    },
+    {
+      kind: 'porta',
+      id: 'porta-1-4',
+      op: '/',
+      tier: 1,
+      panel: { x: 3200, y: 450 },
+    },
+  ],
+  digits: [
+    { x: 400, y: 430 },
+    { x: 1060, y: 440 },
+    { x: 1700, y: 430 },
+    { x: 2300, y: 150 },
+    { x: 2900, y: 430 },
+  ],
+  checkpoints: [
+    { x: 1300, y: 450 },
+    { x: 2050, y: 170 },
+  ],
+  guardians: [{ id: 'saci-1-4', at: { x: 1500, y: 450 }, op: '-', tier: 1 }],
+};
+```
+
+- [ ] **Step 2: Escreva a 1-5**
+
+`src/game/levels/level-1-5.ts`:
+
+```ts
+import type { LevelSpec } from './reach';
+
+const GROUND_Y = 500;
+
+/**
+ * Portão da Escola: a última do Mundo 1, e a mais longa.
+ *
+ * Junta os quatro mecanismos e as quatro operações. O caminho sobe em três
+ * degraus grandes — blocos até o terraço, ponte até a laje, ventania até o
+ * telhado — e só depois desce para o portão.
+ */
+export const LEVEL_1_5: LevelSpec = {
+  id: '1-5',
+  name: 'Portão da Escola',
+  spawn: { x: 220, y: GROUND_Y - 140 },
+  worldWidth: 4200,
+  platforms: [
+    // chão inicial. 130 … 800
+    { x: 465, y: GROUND_Y, width: 670, height: 40 },
+    // terraço. 930 … 1500, 150 px acima
+    { x: 1215, y: GROUND_Y - 150, width: 570, height: 40 },
+    // laje. 1860 … 2400, mesma altura do terraço
+    { x: 2130, y: GROUND_Y - 150, width: 540, height: 40 },
+    // telhado. 2500 … 3100, 260 px acima da laje
+    { x: 2800, y: GROUND_Y - 410, width: 600, height: 40 },
+    // chão do portão. 3200 … 4000
+    { x: 3600, y: GROUND_Y, width: 800, height: 40 },
+  ],
+  mechanisms: [
+    {
+      kind: 'blocos',
+      id: 'blocos-1-5',
+      op: '+',
+      tier: 2,
+      panel: { x: 620, y: 450 },
+      origin: { x: 840, y: GROUND_Y - 20 },
+    },
+    {
+      kind: 'ponte',
+      id: 'ponte-1-5',
+      op: '-',
+      tier: 2,
+      panel: { x: 1100, y: 300 },
+      // 1540 … 1780, no nível do terraço
+      platform: { x: 1660, y: GROUND_Y - 160, width: 240, height: 20 },
+    },
+    {
+      kind: 'ventania',
+      id: 'vento-1-5',
+      op: '*',
+      tier: 2,
+      panel: { x: 1950, y: 300 },
+      origin: { x: 2300, y: GROUND_Y - 170 },
+    },
+    {
+      kind: 'porta',
+      id: 'porta-1-5',
+      op: '/',
+      tier: 2,
+      panel: { x: 3850, y: 450 },
+    },
+  ],
+  digits: [
+    { x: 400, y: 430 },
+    { x: 1000, y: 280 },
+    { x: 1660, y: 290 },
+    { x: 2200, y: 280 },
+    { x: 2800, y: 20 },
+    { x: 3700, y: 430 },
+  ],
+  checkpoints: [
+    { x: 1400, y: 300 },
+    { x: 2550, y: 40 },
+  ],
+  guardians: [
+    { id: 'saci-1-5', at: { x: 1300, y: 300 }, op: '-', tier: 2 },
+    { id: 'saci-1-5b', at: { x: 3400, y: 450 }, op: '*', tier: 1 },
+  ],
+};
+```
+
+- [ ] **Step 3: Registre as duas**
+
+Em `src/game/levels/index.ts`, importe as duas e acrescente ao `LEVEL_ORDER`:
+
+```ts
+export const LEVEL_ORDER = [LEVEL_1_1, LEVEL_1_2, LEVEL_1_3, LEVEL_1_4, LEVEL_1_5] as const;
+```
+
+- [ ] **Step 4: Rode o teste de alcance — este é o passo que importa**
+
+```bash
+npx vitest run tests/game/reach.test.ts
+```
+
+O `describe.each(LEVEL_ORDER)` passa a rodar sobre cinco fases e cobre, em cada
+uma: o jogador nasce em cima de alguma plataforma, toda plataforma é alcançável,
+`unreachablePoints` é vazio, existe uma porta, e sem os mecanismos a fase trava.
+
+Esperado: PASS. **Se falhar, a geometria é que está errada — conserte a fase, não
+o teste.** A mensagem diz qual ponto ficou fora de alcance. Erro mais comum: um
+número dourado ou uma bandeira mais de `SAFE_STEP` acima da plataforma de baixo.
+
+- [ ] **Step 5: Rode tudo e comite**
+
+```bash
+npx tsc -b
+npx oxlint src tests
+npx vitest run
+git add src/game/levels
+git commit -m "feat: fases 1-4 e 1-5 fecham o mundo 1"
+```
+
+---
+
+### Task 10: SPEC em dia e verificação manual
 
 **Files:**
 - Modify: `SPEC.md`
@@ -1163,8 +1828,9 @@ Marque como feitos os passos 0 a 4, e reescreva os seguintes para o que sobrou:
 |---|---------|-------------------------|
 | 5 | Áudio, partículas e comemoração de fim de fase | Acertar uma conta faz som e a fase termina com confete |
 | 6 | Dificuldade adaptativa + Guardião Saci | A conta fica mais difícil sozinha e dá pra derrotar um guardião |
-| 7 | Fases 1-4 e 1-5 + créditos | Mundo 1 fechado — versão entregável |
-| 8 | Deploy VPS + HTTPS + instalação no celular | Instala como app no celular do Junior e da Ana |
+| 7 | Quatro operações + ventania + fases 1-4 e 1-5 | Mundo 1 fechado com cinco fases — versão entregável |
+| 8 | Créditos e tela final do Mundo 1 | Termina a 1-5 e aparece o nome dos alunos |
+| 9 | Deploy VPS + HTTPS + instalação no celular | Instala como app no celular do Junior e da Ana |
 
 - [ ] **Step 3: Commit**
 
@@ -1191,10 +1857,23 @@ Fim de fase:
 - [ ] As três estrelas aparecem uma de cada vez
 - [ ] "Próxima" leva à fase seguinte; na 1-3 o botão vira "Jogar de novo"
 
-Dificuldade:
+Contas e dificuldade:
+- [ ] A 1-2 pede uma subtração na porta; a 1-3 pede `−`, `+` e `×`
+- [ ] A 1-4 e a 1-5 pedem divisão, e a divisão sempre dá resultado exato
+- [ ] A subtração nunca aparece com resultado negativo
 - [ ] Acertando três contas de `+` seguidas, a quarta vem visivelmente maior
 - [ ] Errando duas seguidas, a seguinte volta a ser fácil
 - [ ] Fechar e reabrir o jogo mantém o nível alcançado
+- [ ] Acertando uma conta grande nos blocos, a escada para no oitavo degrau —
+      não atravessa o terraço nem sai da tela
+
+Ventania e as cinco fases:
+- [ ] A tela de fases mostra cinco cartões, com as seguintes trancadas
+- [ ] Na 1-4, acertar a conta da ventania abre o redemoinho
+- [ ] Entrando no redemoinho e segurando o pulo, o boneco sobe até a laje
+- [ ] O tempo de voo acaba sozinho e dá pra entrar de novo, sem penalidade
+- [ ] A 1-5 tem os quatro mecanismos e leva bem mais tempo que a 1-1
+- [ ] Terminar a 1-5 mostra "Jogar de novo" no lugar de "Próxima"
 
 Guardião (modo Aventura):
 - [ ] Escolhendo **Explorador** na tela de título, nenhum guardião aparece
