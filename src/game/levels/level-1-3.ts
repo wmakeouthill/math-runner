@@ -3,12 +3,13 @@ import type { LevelSpec } from './reach';
 const GROUND_Y = 500;
 
 /**
- * Festa Junina no Pátio: ponte e blocos na mesma fase, contas até 20, e a
- * porta cobra a conta mais difícil do mundo 1.
+ * Festa Junina no Pátio: ponte e blocos na mesma fase, de noite, com
+ * bandeirinhas. Contas até 20, e a porta cobra a conta mais difícil do mundo 1.
  */
 export const LEVEL_1_3: LevelSpec = {
   id: '1-3',
   name: 'Festa Junina no Pátio',
+  theme: 'festa',
   spawn: { x: 220, y: GROUND_Y - 140 },
   worldWidth: 3200,
   platforms: [

@@ -14,7 +14,7 @@ export function LevelSelect() {
   return (
     <main style={styles.screen}>
       <h1 style={styles.heading}>ESCOLHA A FASE</h1>
-      <p style={styles.world}>MUNDO 1 · QUINTAL DA ESCOLA</p>
+      <p style={styles.world}>MUNDO 1 · BRASIL</p>
 
       <div style={styles.row}>
         {LEVEL_ORDER.map((level) => {

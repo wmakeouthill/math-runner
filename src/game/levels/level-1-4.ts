@@ -3,14 +3,16 @@ import type { LevelSpec } from './reach';
 const GROUND_Y = 500;
 
 /**
- * Quadra Coberta: a fase da ventania.
+ * Travessia do Sertão: a fase da ventania.
  *
  * A plataforma alta está 280 px acima do chão — o pulo alcança 136 e a escada
- * de blocos não chega lá. Só o redemoinho sobe isso.
+ * de blocos não chega lá. Só o redemoinho sobe isso. Vento em estrada seca
+ * faz mais sentido do que vento em quadra coberta.
  */
 export const LEVEL_1_4: LevelSpec = {
   id: '1-4',
-  name: 'Quadra Coberta',
+  name: 'Travessia do Sertão',
+  theme: 'sertao',
   spawn: { x: 220, y: GROUND_Y - 140 },
   worldWidth: 3400,
   platforms: [

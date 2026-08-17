@@ -15,6 +15,7 @@ const GROUND_Y = 500;
 export const LEVEL_1_1: LevelSpec = {
   id: '1-1',
   name: 'Quintal da Escola',
+  theme: 'quintal',
   spawn: { x: 220, y: GROUND_Y - 140 },
   worldWidth: 2700,
   platforms: [

@@ -47,6 +47,30 @@ export const PALETTE = {
   botoPink: '#f08fb0',
   curupiraHair: '#e4472c',
   curupiraSkin: '#b5763f',
+
+  // Feira Livre (1-2)
+  feiraSky: '#ffd9a0',
+  feiraSkyLow: '#ffeccb',
+  feiraTent: '#e2574c',
+  feiraCrate: '#c98f4b',
+
+  // Festa Junina à noite (1-3)
+  festaSky: '#2b1f52',
+  festaSkyLow: '#6b3f7a',
+  festaFlag: '#ffd166',
+  festaFire: '#ff8a3d',
+
+  // Sertão (1-4)
+  sertaoSky: '#ffc478',
+  sertaoSkyLow: '#ffe6b8',
+  sertaoGround: '#c4a06a',
+  sertaoCactus: '#4f7a3a',
+
+  // Mata do Curupira (1-5)
+  mataSky: '#bfe6c9',
+  mataSkyLow: '#e6f5ea',
+  mataTrunk: '#5a4028',
+  mataLeaf: '#1f5c33',
 } as const;
 
 export type ColorName = keyof typeof PALETTE;

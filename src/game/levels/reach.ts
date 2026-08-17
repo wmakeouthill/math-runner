@@ -2,6 +2,7 @@ import { GAME_FEEL } from '@/game/constants';
 import type { Op, Tier } from '@/game/math/mathEngine.types';
 import type { Difficulty } from '@/game/math/difficulty';
 import type { FolkKind } from '@/game/art/folklore';
+import type { ThemeName } from '@/game/art/themes';
 
 export type PlatformSpec = {
   x: number;
@@ -46,6 +47,8 @@ export type MechanismSpec = MechanismEffect & {
 export type LevelSpec = {
   id: string;
   name: string;
+  /** Cenário desta fase. Duas fases não repetem cenário no mesmo mundo. */
+  theme: ThemeName;
   spawn: Point;
   worldWidth: number;
   platforms: readonly PlatformSpec[];

@@ -21,6 +21,7 @@ import {
   type LevelSpec,
   type PlatformSpec,
 } from '@/game/levels/reach';
+import { THEMES } from '@/game/art/themes';
 
 const chao: PlatformSpec = { x: 400, y: 500, width: 400, height: 40 };
 
@@ -201,5 +202,18 @@ describe('voo da ventania', () => {
     // só +200 e o vão ficava 100 px *dentro* do limite.
     const longe = { x: 500 + 300 + FLIGHT_GAP + 400, y: 500, width: 600, height: 40 };
     expect(canReach(chao, longe, true)).toBe(false);
+  });
+});
+
+describe('cenários', () => {
+  it('cada fase tem um cenário conhecido', () => {
+    for (const level of LEVEL_ORDER) {
+      expect(THEMES[level.theme]).toBeDefined();
+    }
+  });
+
+  it('as cinco fases não repetem cenário — é o que tira o "tudo igual"', () => {
+    const usados = new Set(LEVEL_ORDER.map((level) => level.theme));
+    expect(usados.size).toBe(LEVEL_ORDER.length);
   });
 });

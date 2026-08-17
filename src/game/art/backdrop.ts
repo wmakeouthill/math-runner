@@ -1,62 +1,107 @@
 import Phaser from 'phaser';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
 import { GAME_SIZE } from '@/game/constants';
+import { THEMES, type ThemeName } from '@/game/art/themes';
+
+export type { ThemeName, LevelTheme } from '@/game/art/themes';
+export { THEMES } from '@/game/art/themes';
+
+const cor = toPhaserColor;
 
 /**
- * Quintal da Escola desenhado em runtime — sem tileset, sem download.
+ * Cenário desenhado em runtime — sem tileset, sem download.
  *
- * Quatro profundidades com `scrollFactor` diferente: o céu não anda, os morros
- * andam devagar, o muro e as mangueiras quase acompanham o jogador. É o que dá
- * sensação de profundidade sem nenhum asset (SPEC 7).
+ * Quatro profundidades com `scrollFactor` diferente: o céu não anda, os vultos
+ * distantes andam devagar, o enfeite quase acompanha o jogador. É o que dá
+ * profundidade sem nenhum asset (SPEC 7).
  */
-export function createBackdrop(scene: Phaser.Scene, worldWidth: number): void {
+export function createBackdrop(
+  scene: Phaser.Scene,
+  worldWidth: number,
+  themeName: ThemeName,
+): void {
   const { width, height } = GAME_SIZE;
+  const theme = THEMES[themeName];
 
-  // céu — preso na câmera
   const sky = scene.add.graphics();
-  sky.fillGradientStyle(
-    toPhaserColor(PALETTE.sky),
-    toPhaserColor(PALETTE.sky),
-    toPhaserColor(PALETTE.skyLow),
-    toPhaserColor(PALETTE.skyLow),
-    1,
-  );
+  sky.fillGradientStyle(cor(theme.sky), cor(theme.sky), cor(theme.skyLow), cor(theme.skyLow), 1);
   sky.fillRect(0, 0, width, height);
   sky.setScrollFactor(0).setDepth(-100);
 
-  // morros distantes
-  const hills = scene.add.graphics();
-  hills.fillStyle(toPhaserColor(PALETTE.grassDark), 1);
+  // Noite de festa junina ganha lua; os outros ganham sol baixo.
+  const astro = scene.add.circle(
+    width - 90,
+    82,
+    themeName === 'festa' ? 26 : 34,
+    cor(themeName === 'festa' ? PALETTE.ink : PALETTE.festaFlag),
+    themeName === 'festa' ? 0.9 : 0.55,
+  );
+  astro.setScrollFactor(0).setDepth(-95);
+
+  const far = scene.add.graphics();
+  far.fillStyle(cor(theme.far), 1);
   for (let x = -200; x < worldWidth; x += 340) {
-    hills.fillEllipse(x, height - 80, 540, 260);
+    if (themeName === 'feira') {
+      far.fillTriangle(x - 130, height - 120, x, height - 250, x + 130, height - 120);
+      far.fillRect(x - 120, height - 130, 240, 70);
+    } else {
+      far.fillEllipse(x, height - 80, 540, 260);
+    }
   }
-  hills.setScrollFactor(0.2).setDepth(-90);
+  far.setScrollFactor(0.2).setDepth(-90);
 
-  // muro da quadra
-  const wall = scene.add.graphics();
-  wall.fillStyle(toPhaserColor(PALETTE.wall), 1);
-  wall.fillRect(0, height - 190, worldWidth, 120);
-  wall.lineStyle(2, toPhaserColor(PALETTE.steel), 0.22);
-  for (let y = height - 190; y < height - 70; y += 24) {
-    wall.lineBetween(0, y, worldWidth, y);
-  }
-  wall.setScrollFactor(0.6).setDepth(-80);
-
-  // mangueiras
-  const trees = scene.add.graphics();
+  const decor = scene.add.graphics();
   for (let x = 180; x < worldWidth; x += 430) {
-    trees.fillStyle(toPhaserColor(PALETTE.dirt), 1);
-    trees.fillRect(x, height - 230, 16, 95);
-    trees.fillStyle(toPhaserColor(PALETTE.grass), 1);
-    trees.fillCircle(x + 8, height - 248, 54);
-    trees.fillCircle(x - 30, height - 218, 38);
-    trees.fillCircle(x + 46, height - 218, 38);
-  }
-  trees.setScrollFactor(0.8).setDepth(-70);
+    switch (themeName) {
+      case 'sertao':
+        decor.fillStyle(cor(theme.decor), 1);
+        decor.fillRect(x, height - 240, 20, 145);
+        decor.fillRect(x - 26, height - 200, 26, 16);
+        decor.fillRect(x + 20, height - 220, 26, 16);
+        decor.fillRect(x - 26, height - 216, 16, 32);
+        decor.fillRect(x + 30, height - 236, 16, 32);
+        break;
 
-  // faixa de grama rente ao chão
-  const grass = scene.add.graphics();
-  grass.fillStyle(toPhaserColor(PALETTE.grass), 1);
-  grass.fillRect(0, height - 70, worldWidth, 70);
-  grass.setDepth(-60);
+      case 'festa':
+        decor.fillStyle(cor(theme.decorAlt), 1);
+        decor.fillRect(x, height - 250, 8, 160);
+        for (let i = 0; i < 8; i += 1) {
+          decor.fillStyle(cor(i % 2 === 0 ? theme.decor : theme.decorAlt), 1);
+          const bx = x + 14 + i * 46;
+          decor.fillTriangle(bx, height - 246, bx + 26, height - 246, bx + 13, height - 218);
+        }
+        break;
+
+      case 'mata':
+        decor.fillStyle(cor(theme.decorAlt), 1);
+        decor.fillRect(x, height - 300, 22, 165);
+        decor.fillStyle(cor(theme.decor), 1);
+        decor.fillCircle(x + 11, height - 318, 74);
+        decor.fillCircle(x - 46, height - 280, 50);
+        decor.fillCircle(x + 68, height - 280, 50);
+        break;
+
+      case 'feira':
+        decor.fillStyle(cor(theme.decorAlt), 1);
+        decor.fillRect(x, height - 150, 54, 54);
+        decor.fillRect(x + 58, height - 150, 54, 54);
+        decor.fillRect(x + 28, height - 206, 54, 54);
+        break;
+
+      case 'quintal':
+        decor.fillStyle(cor(theme.decorAlt), 1);
+        decor.fillRect(x, height - 230, 16, 95);
+        decor.fillStyle(cor(theme.decor), 1);
+        decor.fillCircle(x + 8, height - 248, 54);
+        decor.fillCircle(x - 30, height - 218, 38);
+        decor.fillCircle(x + 46, height - 218, 38);
+        break;
+    }
+  }
+  decor.setScrollFactor(0.8).setDepth(-70);
+
+  const chao = scene.add.graphics();
+  chao.fillStyle(cor(theme.near), 1);
+  chao.fillRect(0, height - 70, worldWidth, 70);
+  chao.setDepth(-60);
 }

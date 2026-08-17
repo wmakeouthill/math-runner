@@ -3,15 +3,17 @@ import type { LevelSpec } from './reach';
 const GROUND_Y = 500;
 
 /**
- * Portão da Escola: a última do Mundo 1, e a mais longa.
+ * Mata do Curupira: a última do Mundo 1, e a mais longa.
  *
  * Junta os quatro mecanismos e as quatro operações. O caminho sobe em três
  * degraus grandes — blocos até o terraço, ponte até a laje, ventania até o
- * telhado — e só depois desce para o portão.
+ * telhado — e só depois desce para o portão da escola. O Curupira é guardião
+ * de mata, então o chefe fica na casa dele.
  */
 export const LEVEL_1_5: LevelSpec = {
   id: '1-5',
-  name: 'Portão da Escola',
+  name: 'Mata do Curupira',
+  theme: 'mata',
   spawn: { x: 220, y: GROUND_Y - 140 },
   worldWidth: 4200,
   platforms: [

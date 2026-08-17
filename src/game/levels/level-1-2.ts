@@ -3,7 +3,7 @@ import type { LevelSpec } from './reach';
 const GROUND_Y = 500;
 
 /**
- * Recreio no Pátio: aqui entra a escada de blocos.
+ * Feira do Bairro: aqui entra a escada de blocos.
  *
  * O terraço está 150 px acima do chão e o pulo alcança 136 — não tem como
  * subir sem os blocos. A fase pede dois degraus: eles põem o jogador 80 px
@@ -13,7 +13,8 @@ const GROUND_Y = 500;
  */
 export const LEVEL_1_2: LevelSpec = {
   id: '1-2',
-  name: 'Recreio no Pátio',
+  name: 'Feira do Bairro',
+  theme: 'feira',
   spawn: { x: 220, y: GROUND_Y - 140 },
   worldWidth: 2600,
   platforms: [

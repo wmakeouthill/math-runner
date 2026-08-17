@@ -10,6 +10,7 @@ import { PLAYER_HEIGHT, PLAYER_WIDTH } from '@/game/art/characterTexture';
 import { ensurePlayerAnims, ensureWingAnims, syncPlayerVisuals } from '@/game/art/characterAnims';
 import type { CharacterId } from '@/store/useGameStore.types';
 import { createBackdrop } from '@/game/art/backdrop';
+import { THEMES } from '@/game/art/themes';
 import { CalcPanel } from '@/game/mechanisms/CalcPanel';
 import { Bridge } from '@/game/mechanisms/Bridge';
 import { Blocks } from '@/game/mechanisms/Blocks';
@@ -75,8 +76,8 @@ export class LevelScene extends Phaser.Scene {
     this.spawnPoint = this.level.spawn;
     useRunStore.getState().begin(this.level.id, this.level.digits.length);
 
-    this.cameras.main.setBackgroundColor(PALETTE.sky);
-    createBackdrop(this, this.level.worldWidth);
+    this.cameras.main.setBackgroundColor(THEMES[this.level.theme].sky);
+    createBackdrop(this, this.level.worldWidth, this.level.theme);
 
     this.platforms = this.physics.add.staticGroup();
     for (const spec of this.level.platforms) this.addPlatform(this.platforms, spec);
