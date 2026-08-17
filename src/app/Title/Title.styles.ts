@@ -45,6 +45,13 @@ export const styles = {
     border: `1px solid ${PALETTE.steel}`,
     borderRadius: '0.9rem',
   },
+  schoolCrest: {
+    height: '4rem',
+    width: 'auto',
+    flexShrink: 0,
+    // O PNG veio com fundo preto; no fundo marinho da faixa o preto some.
+    mixBlendMode: 'lighten',
+  },
   students: {
     fontSize: '1rem',
     fontWeight: 700,

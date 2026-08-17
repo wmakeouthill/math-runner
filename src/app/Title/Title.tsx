@@ -1,7 +1,7 @@
 import { useGameStore } from '@/store/useGameStore';
 import type { CharacterId, GameMode } from '@/store/useGameStore.types';
+import brasaoRj from '@/assets/brasao-rj.png';
 import { Portrait } from '@/app/Portrait/Portrait';
-import { Crest } from '@/app/Portrait/Crest';
 import { OptionCard } from './OptionCard';
 import { styles } from './Title.styles';
 
@@ -16,7 +16,7 @@ const MODES: ReadonlyArray<{ id: GameMode; label: string; hint: string }> = [
 ];
 
 export function Title() {
-  const startLevel = useGameStore((state) => state.startLevel);
+  const goToScreen = useGameStore((state) => state.goToScreen);
   const character = useGameStore((state) => state.character);
   const setCharacter = useGameStore((state) => state.setCharacter);
   const mode = useGameStore((state) => state.mode);
@@ -29,7 +29,11 @@ export function Title() {
         <p style={styles.subtitle}>O Resgate dos Números</p>
 
         <div style={styles.schoolBand}>
-          <Crest size={34} />
+          <img
+            src={brasaoRj}
+            alt="Brasão do Estado do Rio de Janeiro"
+            style={styles.schoolCrest}
+          />
           <span>
             <span style={styles.students}>Junior · Ana</span>
             <br />
@@ -66,7 +70,7 @@ export function Title() {
           ))}
         </div>
 
-        <button type="button" style={styles.playButton} onClick={() => startLevel('1-1')}>
+        <button type="button" style={styles.playButton} onClick={() => goToScreen('select')}>
           JOGAR
         </button>
       </section>
