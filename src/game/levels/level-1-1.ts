@@ -56,4 +56,5 @@ export const LEVEL_1_1: LevelSpec = {
     { x: 2350, y: 350 },
   ],
   checkpoints: [{ x: 1200, y: 450 }],
+  guardians: [],
 };

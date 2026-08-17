@@ -20,6 +20,14 @@ export type MechanismEffect =
   /** A porta da fase abre e a fase termina. */
   | { kind: 'porta' };
 
+export type GuardianSpec = {
+  id: string;
+  /** Onde ele espera. Fica em cima de uma plataforma, como o painel. */
+  at: Point;
+  op: Op;
+  tier: Tier;
+};
+
 export type MechanismSpec = MechanismEffect & {
   /** Liga painel, resposta e mecanismo. Único dentro da fase. */
   id: string;
@@ -40,6 +48,8 @@ export type LevelSpec = {
   digits: readonly Point[];
   /** Bandeiras: morrer devolve o jogador à última que ele tocou. */
   checkpoints: readonly Point[];
+  /** Guardiões do folclore. Só aparecem no modo Aventura. */
+  guardians: readonly GuardianSpec[];
 };
 
 /** Tamanho e passo dos blocos da escada. */
@@ -174,6 +184,7 @@ export function pointIsReachable(level: LevelSpec, point: Point): boolean {
 export function unreachablePoints(level: LevelSpec): readonly Point[] {
   const required = [
     ...level.mechanisms.map((mechanism) => mechanism.panel),
+    ...level.guardians.map((guardian) => guardian.at),
     ...level.digits,
     ...level.checkpoints,
   ];

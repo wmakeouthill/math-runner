@@ -58,4 +58,8 @@ export const LEVEL_1_3: LevelSpec = {
     { x: 1100, y: 450 },
     { x: 2500, y: 450 },
   ],
+  guardians: [
+    { id: 'saci-1-3', at: { x: 1300, y: 450 }, op: '+', tier: 2 },
+    { id: 'saci-1-3b', at: { x: 2100, y: 300 }, op: '+', tier: 2 },
+  ],
 };

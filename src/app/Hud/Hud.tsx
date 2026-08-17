@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/useGameStore';
-import { useRunStore } from '@/store/useRunStore';
+import { MAX_HEARTS, useRunStore } from '@/store/useRunStore';
 import { levelById } from '@/game/levels';
 import { formatTime } from '@/app/time';
 import { styles } from './Hud.styles';
@@ -23,10 +23,12 @@ export function Hud() {
   const goToScreen = useGameStore((state) => state.goToScreen);
   const muted = useGameStore((state) => state.muted);
   const toggleMuted = useGameStore((state) => state.toggleMuted);
+  const mode = useGameStore((state) => state.mode);
   const levelId = useGameStore((state) => state.currentLevel);
   const digitsTaken = useRunStore((state) => state.digitsTaken);
   const digitsTotal = useRunStore((state) => state.digitsTotal);
   const errors = useRunStore((state) => state.errors);
+  const hearts = useRunStore((state) => state.hearts);
   const startedAt = useRunStore((state) => state.startedAt);
   const result = useRunStore((state) => state.result);
 
@@ -39,6 +41,12 @@ export function Hud() {
         ← Fases
       </button>
       <span style={styles.levelName}>{level?.name ?? ''}</span>
+      {mode === 'aventura' && (
+        <span style={styles.hearts}>
+          {'❤'.repeat(hearts)}
+          {'🖤'.repeat(MAX_HEARTS - hearts)}
+        </span>
+      )}
       <span style={styles.digits}>
         ★ {digitsTaken}/{digitsTotal}
       </span>

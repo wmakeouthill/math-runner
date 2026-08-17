@@ -33,6 +33,7 @@ export const styles = {
     letterSpacing: '0.04em',
   },
   digits: { ...pill, color: PALETTE.gold },
+  hearts: { ...pill, letterSpacing: '0.1em' },
   time: { ...pill, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' },
   errors: pill,
   exit: {

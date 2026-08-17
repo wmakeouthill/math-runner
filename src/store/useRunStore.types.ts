@@ -11,6 +11,11 @@ export type RunState = {
   startedAt: number;
   /** Preenchido quando a porta abre; é o que a tela de resultado mostra. */
   result: LevelResult | null;
+  /** Corações do modo Aventura. No Explorador ficam parados em MAX_HEARTS. */
+  hearts: number;
+  /** Tira um coração; devolve true se ainda sobrou algum. */
+  loseHeart: () => boolean;
+  refillHearts: () => void;
   begin: (levelId: string, digitsTotal: number) => void;
   takeDigit: () => void;
   addError: () => void;

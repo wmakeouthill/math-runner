@@ -11,6 +11,7 @@ import { Bridge } from '@/game/mechanisms/Bridge';
 import { Blocks } from '@/game/mechanisms/Blocks';
 import { GoldenDigit } from '@/game/mechanisms/GoldenDigit';
 import { Checkpoint } from '@/game/mechanisms/Checkpoint';
+import { Guardian } from '@/game/mechanisms/Guardian';
 import { generateQuestion } from '@/game/math/mathEngine';
 import type { Tier } from '@/game/math/mathEngine.types';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
@@ -35,6 +36,7 @@ export class LevelScene extends Phaser.Scene {
   private readonly blocks = new Map<string, Blocks>();
   private readonly digits: GoldenDigit[] = [];
   private readonly checkpoints: Checkpoint[] = [];
+  private readonly guardians = new Map<string, Guardian>();
   /** Anda para a última bandeira tocada. */
   private spawnPoint: Point = LEVEL_ORDER[0].spawn;
   private unsubscribe: (() => void) | null = null;
@@ -52,6 +54,7 @@ export class LevelScene extends Phaser.Scene {
     this.blocks.clear();
     this.digits.length = 0;
     this.checkpoints.length = 0;
+    this.guardians.clear();
     this.finishing = false;
 
     this.level = levelById(useGameStore.getState().currentLevel) ?? LEVEL_ORDER[0];
@@ -83,6 +86,12 @@ export class LevelScene extends Phaser.Scene {
     }
 
     for (const at of this.level.checkpoints) this.checkpoints.push(new Checkpoint(this, at));
+    // Guardiões só existem no modo Aventura — é o botão da tela de título.
+    if (useGameStore.getState().mode === 'aventura') {
+      for (const spec of this.level.guardians) {
+        this.guardians.set(spec.id, new Guardian(this, spec.id, spec.at));
+      }
+    }
     this.level.digits.forEach((at, index) => {
       this.digits.push(new GoldenDigit(this, at, String(index + 1)));
     });
@@ -143,7 +152,34 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private applyOutcome(outcome: ChallengeOutcome): void {
-    // Sobe para o topo: errar também mexe no nível do aluno.
+    const guardian = this.guardians.get(outcome.source);
+    if (guardian) {
+      const spec = this.level.guardians.find((item) => item.id === outcome.source);
+      // A dificuldade adaptativa vale para a conta do guardião também.
+      if (spec) useGameStore.getState().recordAnswer(spec.op, outcome.correct);
+
+      if (outcome.correct) {
+        playSfx('certo');
+        guardian.defeat();
+        burst(this, guardian.at.x, guardian.at.y, toPhaserColor(PALETTE.cyan), 24);
+        useChallengeStore.getState().close();
+        return;
+      }
+
+      playSfx('errado');
+      guardian.taunt();
+      this.cameras.main.shake(140, 0.005);
+      useRunStore.getState().addError();
+
+      // Sem corações o jogador volta para a bandeira — e recomeça inteiro.
+      if (!useRunStore.getState().loseHeart()) {
+        useChallengeStore.getState().close();
+        useRunStore.getState().refillHearts();
+        this.respawn();
+      }
+      return;
+    }
+
     const mechanism = this.level.mechanisms.find((item) => item.id === outcome.source);
     if (mechanism) useGameStore.getState().recordAnswer(mechanism.op, outcome.correct);
 
@@ -156,8 +192,6 @@ export class LevelScene extends Phaser.Scene {
 
     playSfx('certo');
 
-    // Mecanismo primeiro: se o setText do painel explodir numa cena
-    // destruída, a ponte da cena viva ainda precisa descer.
     switch (mechanism?.kind) {
       case 'ponte':
         playSfx('ponte');
@@ -249,6 +283,16 @@ export class LevelScene extends Phaser.Scene {
         burst(this, flag.at.x, flag.at.y - 20, toPhaserColor(PALETTE.cyan), 12);
         this.spawnPoint = { x: flag.at.x, y: flag.at.y - 40 };
       }
+    }
+
+    for (const guardian of this.guardians.values()) {
+      if (!guardian.isBlocking(this.player.x, this.player.y)) continue;
+      const spec = this.level.guardians.find((item) => item.id === guardian.id);
+      if (!spec) continue;
+      const { playerTier } = useGameStore.getState();
+      const tier = Math.max(spec.tier, playerTier[spec.op]) as Tier;
+      useChallengeStore.getState().open(spec.id, generateQuestion(spec.op, tier));
+      break;
     }
 
     const nearby = this.panels.filter((panel) =>
