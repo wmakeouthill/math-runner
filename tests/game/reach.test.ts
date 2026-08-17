@@ -17,6 +17,8 @@ import {
   MAX_BLOCK_STEPS,
   SAFE_GAP,
   SAFE_STEP,
+  FLIGHT_STEP,
+  FLIGHT_GAP,
   type LevelSpec,
   type PlatformSpec,
 } from '@/game/levels/reach';
@@ -179,5 +181,31 @@ describe.each(LEVEL_ORDER)('fase $id — blocos', (level) => {
       if (mechanism.kind !== 'blocos') continue;
       expect(MIN_ANSWER[mechanism.op]).toBeGreaterThanOrEqual(2);
     }
+  });
+});
+
+describe('voo da ventania', () => {
+  const chao = { x: 500, y: 500, width: 600, height: 40 };
+  const altissima = { x: 1200, y: 220, width: 400, height: 40 };
+
+  it('a plataforma alta é impossível de pulo', () => {
+    expect(canReach(chao, altissima)).toBe(false);
+  });
+
+  it('e possível voando', () => {
+    expect(canReach(chao, altissima, true)).toBe(true);
+  });
+
+  it('voar alcança mais que pular, mas não alcança tudo', () => {
+    expect(FLIGHT_STEP).toBeGreaterThan(SAFE_STEP);
+    const lua = { x: 1200, y: -900, width: 400, height: 40 };
+    expect(canReach(chao, lua, true)).toBe(false);
+  });
+
+  it('o vão horizontal também cresce, mas tem limite', () => {
+    // Centro = metade da largura (300) + FLIGHT_GAP + folga: o plano somava
+    // só +200 e o vão ficava 100 px *dentro* do limite.
+    const longe = { x: 500 + 300 + FLIGHT_GAP + 400, y: 500, width: 600, height: 40 };
+    expect(canReach(chao, longe, true)).toBe(false);
   });
 });

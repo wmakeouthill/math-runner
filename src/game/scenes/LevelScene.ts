@@ -4,6 +4,7 @@ import { JumpController } from '@/game/systems/JumpController';
 import { InputSystem } from '@/game/systems/InputSystem';
 import { levelById, LEVEL_ORDER } from '@/game/levels';
 import type { LevelSpec, PlatformSpec, Point } from '@/game/levels/reach';
+import { FLIGHT } from '@/game/levels/reach';
 import { ensureCharacterTexture } from '@/game/art/characterTexture';
 import { createBackdrop } from '@/game/art/backdrop';
 import { CalcPanel } from '@/game/mechanisms/CalcPanel';
@@ -12,6 +13,7 @@ import { Blocks } from '@/game/mechanisms/Blocks';
 import { GoldenDigit } from '@/game/mechanisms/GoldenDigit';
 import { Checkpoint } from '@/game/mechanisms/Checkpoint';
 import { Guardian } from '@/game/mechanisms/Guardian';
+import { Whirlwind } from '@/game/mechanisms/Whirlwind';
 import { generateQuestion } from '@/game/math/mathEngine';
 import type { Tier } from '@/game/math/mathEngine.types';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
@@ -37,6 +39,9 @@ export class LevelScene extends Phaser.Scene {
   private readonly digits: GoldenDigit[] = [];
   private readonly checkpoints: Checkpoint[] = [];
   private readonly guardians = new Map<string, Guardian>();
+  private readonly winds = new Map<string, Whirlwind>();
+  /** Timestamp em que a ventania para de sustentar o jogador. */
+  private flightUntil = 0;
   /** Anda para a última bandeira tocada. */
   private spawnPoint: Point = LEVEL_ORDER[0].spawn;
   private unsubscribe: (() => void) | null = null;
@@ -55,6 +60,8 @@ export class LevelScene extends Phaser.Scene {
     this.digits.length = 0;
     this.checkpoints.length = 0;
     this.guardians.clear();
+    this.winds.clear();
+    this.flightUntil = 0;
     this.finishing = false;
 
     this.level = levelById(useGameStore.getState().currentLevel) ?? LEVEL_ORDER[0];
@@ -82,6 +89,8 @@ export class LevelScene extends Phaser.Scene {
         this.bridges.set(mechanism.id, new Bridge(this, platforms, mechanism.platform));
       } else if (mechanism.kind === 'blocos') {
         this.blocks.set(mechanism.id, new Blocks(this, platforms, mechanism.origin));
+      } else if (mechanism.kind === 'ventania') {
+        this.winds.set(mechanism.id, new Whirlwind(this, mechanism.origin));
       }
     }
 
@@ -207,6 +216,10 @@ export class LevelScene extends Phaser.Scene {
       case 'porta':
         this.celebrate(mechanism.panel);
         break;
+      case 'ventania':
+        playSfx('blocos');
+        this.winds.get(mechanism.id)?.release();
+        break;
     }
 
     for (const panel of this.panels) {
@@ -311,6 +324,19 @@ export class LevelScene extends Phaser.Scene {
       { justPressed: state.jumpJustPressed, justReleased: state.jumpJustReleased },
       body.velocity.y,
     );
+
+    // Dentro do redemoinho o relógio do voo reinicia; fora dele, o que sobrou
+    // ainda vale — quem sai voando não cai no meio do caminho.
+    for (const wind of this.winds.values()) {
+      if (wind.holds(this.player.x, this.player.y)) {
+        this.flightUntil = this.time.now + Whirlwind.durationMs;
+        break;
+      }
+    }
+
+    if (this.time.now < this.flightUntil && state.jumpHeld) {
+      this.player.setVelocityY(-FLIGHT.riseSpeed);
+    }
 
     if (command.type === 'start') {
       playSfx('pulo');

@@ -6,6 +6,8 @@ export type InputState = {
   right: boolean;
   jumpJustPressed: boolean;
   jumpJustReleased: boolean;
+  /** Tecla de pulo segurada agora. É o que sustenta o voo na ventania. */
+  jumpHeld: boolean;
   interactJustPressed: boolean;
 };
 
@@ -73,6 +75,7 @@ export class InputSystem {
         jumpKeys.some((key) => Phaser.Input.Keyboard.JustDown(key)) || this.touchJumpPressed,
       jumpJustReleased:
         jumpKeys.some((key) => Phaser.Input.Keyboard.JustUp(key)) || this.touchJumpReleased,
+      jumpHeld: jumpKeys.some((key) => key.isDown) || this.isTouching('jump'),
       interactJustPressed:
         Phaser.Input.Keyboard.JustDown(this.keyE) ||
         Phaser.Input.Keyboard.JustDown(this.keyEnter) ||

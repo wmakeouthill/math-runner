@@ -18,7 +18,9 @@ export type MechanismEffect =
   /** Uma escada de blocos aparece: um bloco por unidade da resposta. */
   | { kind: 'blocos'; origin: Point }
   /** A porta da fase abre e a fase termina. */
-  | { kind: 'porta' };
+  | { kind: 'porta' }
+  /** Um redemoinho: o jogador voa por alguns segundos. */
+  | { kind: 'ventania'; origin: Point };
 
 export type GuardianSpec = {
   id: string;
@@ -86,6 +88,8 @@ function mechanismPlatforms(mechanism: MechanismSpec): readonly PlatformSpec[] {
       return blockStair(mechanism.origin, MIN_ANSWER[mechanism.op]);
     case 'porta':
       return [];
+    case 'ventania':
+      return [];
   }
 }
 
@@ -118,6 +122,21 @@ export const SAFE_STEP = JUMP_REACH.maxHeight * JUMP_REACH.safety;
 /** Vão horizontal máximo permitido entre duas plataformas. */
 export const SAFE_GAP = JUMP_REACH.maxDistance * JUMP_REACH.safety;
 
+/**
+ * A ventania: quanto tempo o redemoinho sustenta o jogador e com que força.
+ * Curto de propósito — 2,2 s é "alguns segundos" para quem está jogando e
+ * ainda é um número que o level design consegue prever.
+ */
+export const FLIGHT = { ms: 2200, riseSpeed: 220 } as const;
+
+const flightSeconds = FLIGHT.ms / 1000;
+
+/** Subida máxima usando a ventania, com a mesma margem de 70% do pulo. */
+export const FLIGHT_STEP = flightSeconds * FLIGHT.riseSpeed * JUMP_REACH.safety;
+
+/** Avanço horizontal máximo enquanto se voa. */
+export const FLIGHT_GAP = flightSeconds * GAME_FEEL.moveSpeed * JUMP_REACH.safety;
+
 export const topOf = (p: PlatformSpec): number => p.y - p.height / 2;
 const leftOf = (p: PlatformSpec): number => p.x - p.width / 2;
 const rightOf = (p: PlatformSpec): number => p.x + p.width / 2;
@@ -128,11 +147,11 @@ export function horizontalGap(a: PlatformSpec, b: PlatformSpec): number {
   return leftOf(b) > rightOf(a) ? leftOf(b) - rightOf(a) : leftOf(a) - rightOf(b);
 }
 
-/** Dá para ir de `from` até `to` num pulo? Descer é sempre possível. */
-export function canReach(from: PlatformSpec, to: PlatformSpec): boolean {
+/** Dá para ir de `from` até `to`? `flying` = saindo de dentro de uma ventania. */
+export function canReach(from: PlatformSpec, to: PlatformSpec, flying = false): boolean {
   const rise = topOf(from) - topOf(to);
-  if (rise > SAFE_STEP) return false;
-  return horizontalGap(from, to) <= SAFE_GAP;
+  if (rise > (flying ? FLIGHT_STEP : SAFE_STEP)) return false;
+  return horizontalGap(from, to) <= (flying ? FLIGHT_GAP : SAFE_GAP);
 }
 
 /** Índice da plataforma em que o jogador nasce, ou -1 se ele nascer no vácuo. */
@@ -142,12 +161,29 @@ export function spawnPlatformIndex(level: LevelSpec): number {
   );
 }
 
+/** Índices das plataformas que hospedam um redemoinho. */
+function flightPlatforms(level: LevelSpec): ReadonlySet<number> {
+  const platforms = allPlatforms(level);
+  const hosts = new Set<number>();
+
+  for (const mechanism of level.mechanisms) {
+    if (mechanism.kind !== 'ventania') continue;
+    const index = platforms.findIndex(
+      (p) => leftOf(p) <= mechanism.origin.x && mechanism.origin.x <= rightOf(p),
+    );
+    if (index !== -1) hosts.add(index);
+  }
+
+  return hosts;
+}
+
 /** Índices de todas as plataformas alcançáveis a partir do nascimento. */
 export function reachablePlatforms(level: LevelSpec): ReadonlySet<number> {
   const start = spawnPlatformIndex(level);
   if (start === -1) return new Set();
 
   const platforms = allPlatforms(level);
+  const flying = flightPlatforms(level);
   const reached = new Set([start]);
   const queue = [start];
 
@@ -159,7 +195,7 @@ export function reachablePlatforms(level: LevelSpec): ReadonlySet<number> {
     if (!from) continue;
 
     platforms.forEach((to, index) => {
-      if (reached.has(index) || !canReach(from, to)) return;
+      if (reached.has(index) || !canReach(from, to, flying.has(current))) return;
       reached.add(index);
       queue.push(index);
     });
