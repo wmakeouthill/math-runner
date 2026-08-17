@@ -6,9 +6,10 @@ const GROUND_Y = 500;
  * Recreio no Pátio: aqui entra a escada de blocos.
  *
  * O terraço está 150 px acima do chão e o pulo alcança 136 — não tem como
- * subir sem os blocos. Cada unidade da resposta vira um degrau, então uma
- * conta maior dá uma escada mais generosa, mas até a menor resposta possível
- * (2, no `+`) já basta para chegar lá em cima.
+ * subir sem os blocos. A fase pede dois degraus: eles põem o jogador 80 px
+ * acima do chão e o pulo cobre os 70 que faltam. Quem decide o tamanho é a
+ * fase, não a resposta: escada derivada do resultado saía desproporcional e
+ * prendia o mecanismo à soma.
  */
 export const LEVEL_1_2: LevelSpec = {
   id: '1-2',
@@ -27,8 +28,9 @@ export const LEVEL_1_2: LevelSpec = {
     {
       kind: 'blocos',
       id: 'blocos-1',
-      op: '+',
+      op: '*',
       tier: 1,
+      steps: 2,
       panel: { x: 700, y: 450 },
       // primeiro bloco encosta na beirada do chão inicial
       origin: { x: 860, y: GROUND_Y - 20 },

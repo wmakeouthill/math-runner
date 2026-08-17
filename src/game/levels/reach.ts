@@ -1,5 +1,4 @@
 import { GAME_FEEL } from '@/game/constants';
-import { MIN_ANSWER } from '@/game/math/mathEngine';
 import type { Op, Tier } from '@/game/math/mathEngine.types';
 
 export type PlatformSpec = {
@@ -16,7 +15,7 @@ export type MechanismEffect =
   /** Uma ponte levadiça desce e fecha um buraco largo demais para pular. */
   | { kind: 'ponte'; platform: PlatformSpec }
   /** Uma escada de blocos aparece: um bloco por unidade da resposta. */
-  | { kind: 'blocos'; origin: Point }
+  | { kind: 'blocos'; origin: Point; steps: number }
   /** A porta da fase abre e a fase termina. */
   | { kind: 'porta' }
   /** Um redemoinho: o jogador voa por alguns segundos. */
@@ -57,18 +56,13 @@ export type LevelSpec = {
 /** Tamanho e passo dos blocos da escada. */
 export const BLOCK = { size: 40, stepX: 44, stepY: 40 } as const;
 
-/**
- * Teto da escada. A resposta vira degrau até aqui; passou disso, a escada para
- * de crescer. Sem teto, um `99 + 99` no tier 3 constrói 198 degraus e quase
- * 8000 px de escada atravessando a fase inteira.
- */
-export const MAX_BLOCK_STEPS = 8;
+/** Faixa de degraus que uma escada de blocos pode ter. */
+export const BLOCK_STEPS = { min: 2, max: 4 } as const;
 
 /** A escada que `count` blocos formam a partir da origem, degrau a degrau. */
 export function blockStair(origin: Point, count: number): PlatformSpec[] {
-  const total = Math.min(count, MAX_BLOCK_STEPS);
   const steps: PlatformSpec[] = [];
-  for (let i = 0; i < total; i += 1) {
+  for (let i = 0; i < count; i += 1) {
     steps.push({
       x: origin.x + i * BLOCK.stepX,
       y: origin.y - (i + 1) * BLOCK.stepY + BLOCK.size / 2,
@@ -85,7 +79,7 @@ function mechanismPlatforms(mechanism: MechanismSpec): readonly PlatformSpec[] {
     case 'ponte':
       return [mechanism.platform];
     case 'blocos':
-      return blockStair(mechanism.origin, MIN_ANSWER[mechanism.op]);
+      return blockStair(mechanism.origin, mechanism.steps);
     case 'porta':
       return [];
     case 'ventania':

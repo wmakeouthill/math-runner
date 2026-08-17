@@ -32,6 +32,7 @@ export const LEVEL_1_5: LevelSpec = {
       id: 'blocos-1-5',
       op: '+',
       tier: 2,
+      steps: 2,
       panel: { x: 620, y: 450 },
       origin: { x: 840, y: GROUND_Y - 20 },
     },

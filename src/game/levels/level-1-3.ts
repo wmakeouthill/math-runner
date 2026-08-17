@@ -34,8 +34,9 @@ export const LEVEL_1_3: LevelSpec = {
     {
       kind: 'blocos',
       id: 'blocos-1-3',
-      op: '+',
-      tier: 2,
+      op: '/',
+      tier: 1,
+      steps: 3,
       panel: { x: 1300, y: 450 },
       origin: { x: 1540, y: GROUND_Y - 20 },
     },

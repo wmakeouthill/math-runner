@@ -16,21 +16,6 @@ const TABLE: Record<Tier, number> = { 1: 5, 2: 10, 3: 12 };
 
 const pick = (rng: Rng, max: number): number => 1 + Math.floor(rng() * max);
 
-/**
- * Menor resposta que cada operação consegue sortear (`pick` nunca devolve 0).
- *
- * O mecanismo de blocos empilha um bloco por unidade da resposta, então este é
- * o número de degraus no pior caso. É por ele que o teste de alcance mede se a
- * escada sobe o suficiente — projetar a fase pela resposta média é o caminho
- * curto para uma fase que trava uma vez a cada dez partidas.
- */
-export const MIN_ANSWER: Record<Op, number> = {
-  '+': 2,
-  '-': 0,
-  '*': 1,
-  '/': 1,
-};
-
 function operands(op: Op, tier: Tier, rng: Rng): { a: number; b: number; answer: number } {
   switch (op) {
     case '+': {

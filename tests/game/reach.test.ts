@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { LEVEL_ORDER } from '@/game/levels';
 import { LEVEL_1_1 } from '@/game/levels/level-1-1';
-import { MIN_ANSWER } from '@/game/math/mathEngine';
 import {
   allPlatforms,
   blockStair,
   BLOCK,
+  BLOCK_STEPS,
   canReach,
   horizontalGap,
   pointIsReachable,
@@ -14,7 +14,6 @@ import {
   topOf,
   unreachablePoints,
   JUMP_REACH,
-  MAX_BLOCK_STEPS,
   SAFE_GAP,
   SAFE_STEP,
   FLIGHT_STEP,
@@ -153,33 +152,28 @@ describe('pointIsReachable', () => {
   });
 });
 
-describe('teto da escada de blocos', () => {
-  it('uma resposta enorme não constrói uma escada infinita', () => {
-    expect(blockStair({ x: 0, y: 500 }, 198)).toHaveLength(MAX_BLOCK_STEPS);
-  });
-
-  it('respostas pequenas continuam valendo degrau a degrau', () => {
+describe('escada do tamanho do vão', () => {
+  it('a escada tem exatamente os degraus que a fase pediu', () => {
     expect(blockStair({ x: 0, y: 500 }, 3)).toHaveLength(3);
+    expect(blockStair({ x: 0, y: 500 }, 2)).toHaveLength(2);
   });
 
-  it('mesmo no teto, cada degrau continua pulável', () => {
-    const steps = blockStair({ x: 0, y: 500 }, 99);
+  it('cada degrau continua pulável', () => {
     expect(BLOCK.stepY).toBeLessThanOrEqual(SAFE_STEP);
     expect(BLOCK.stepX - BLOCK.size).toBeLessThanOrEqual(SAFE_GAP);
-    expect(steps.length).toBeGreaterThan(1);
   });
 });
 
-describe.each(LEVEL_ORDER)('fase $id — blocos', (level) => {
+describe.each(LEVEL_ORDER)('fase $id — blocos', (level: LevelSpec) => {
   /**
-   * `-` pode dar 0 e `*` e `/` podem dar 1: escada de zero ou um degrau não
-   * sobe em lugar nenhum. Blocos só aceita operação cuja menor resposta
-   * possível já seja um degrau de verdade.
+   * Escada curta demais não sobe; comprida demais atravessa a fase. Duas a
+   * quatro é a faixa que o level design usa e que a fase reserva espaço para.
    */
-  it('a escada de blocos só usa operação que garante 2 degraus', () => {
+  it('toda escada declara entre 2 e 4 degraus', () => {
     for (const mechanism of level.mechanisms) {
       if (mechanism.kind !== 'blocos') continue;
-      expect(MIN_ANSWER[mechanism.op]).toBeGreaterThanOrEqual(2);
+      expect(mechanism.steps).toBeGreaterThanOrEqual(BLOCK_STEPS.min);
+      expect(mechanism.steps).toBeLessThanOrEqual(BLOCK_STEPS.max);
     }
   });
 });

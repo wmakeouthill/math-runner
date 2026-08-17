@@ -196,7 +196,7 @@ export class LevelScene extends Phaser.Scene {
         break;
       case 'blocos':
         playSfx('blocos');
-        this.blocks.get(mechanism.id)?.raise(outcome.answer);
+        this.blocks.get(mechanism.id)?.raise(mechanism.steps);
         break;
       case 'porta':
         this.celebrate(mechanism.panel);

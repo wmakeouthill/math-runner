@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateQuestion, MIN_ANSWER, OP_LABEL } from '@/game/math/mathEngine';
+import { generateQuestion, OP_LABEL } from '@/game/math/mathEngine';
 import type { Op, Question, Tier } from '@/game/math/mathEngine.types';
 
 const OPS: readonly Op[] = ['+', '-', '*', '/'];
@@ -67,15 +67,6 @@ describe('generateQuestion', () => {
   it('o mesmo rng gera a mesma conta', () => {
     const fixed = (): number => 0.42;
     expect(generateQuestion('+', 2, fixed)).toEqual(generateQuestion('+', 2, fixed));
-  });
-
-  /**
-   * O MIN_ANSWER é o que o level design usa para dimensionar a escada de
-   * blocos. Se uma operação puder responder menos do que ele promete, existe
-   * uma partida em que a escada nasce curta demais e a fase trava.
-   */
-  it('nenhuma resposta fica abaixo do MIN_ANSWER da operação', () => {
-    everyQuestion((q) => expect(q.answer).toBeGreaterThanOrEqual(MIN_ANSWER[q.op]));
   });
 
   it('mostra × e ÷, não * e /', () => {
