@@ -1,6 +1,7 @@
+import { useRef } from 'react';
 import { showsHint, useChallengeStore } from '@/store/useChallengeStore';
 import { OP_LABEL } from '@/game/math/mathEngine';
-import { useAnswerKeys } from './MathCard.hooks';
+import { isIntentionalAnswerClick, useAnswerKeys } from './MathCard.hooks';
 import { Hint } from './Hint';
 import { styles } from './MathCard.styles';
 
@@ -23,14 +24,45 @@ export function MathCard() {
 
       <div style={styles.options}>
         {options.map((option, index) => (
-          <button key={option} type="button" className="arcade-press" style={styles.option} onClick={() => answer(option)}>
-            <span style={styles.optionKey}>{index + 1}</span>
-            {option}
-          </button>
+          <AnswerOption key={option} option={option} index={index} onAnswer={answer} />
         ))}
       </div>
 
       {challenge.wrongStreak > 0 ? <p style={styles.retry}>Quase! Tente de novo.</p> : null}
     </section>
+  );
+}
+
+function AnswerOption({
+  option,
+  index,
+  onAnswer,
+}: {
+  option: number;
+  index: number;
+  onAnswer: (option: number) => void;
+}) {
+  const downHere = useRef(false);
+
+  return (
+    <button
+      type="button"
+      className="arcade-press"
+      style={styles.option}
+      onPointerDown={() => {
+        downHere.current = true;
+      }}
+      onPointerCancel={() => {
+        downHere.current = false;
+      }}
+      onClick={(event) => {
+        if (!isIntentionalAnswerClick(event.detail, downHere.current)) return;
+        downHere.current = false;
+        onAnswer(option);
+      }}
+    >
+      <span style={styles.optionKey}>{index + 1}</span>
+      {option}
+    </button>
   );
 }

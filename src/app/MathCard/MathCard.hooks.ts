@@ -22,3 +22,12 @@ export function useAnswerKeys(
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [options, answer]);
 }
+
+/**
+ * O E do pad abre a conta no pointerdown. O clique fantasma do pointerup
+ * cai na resposta que ficou debaixo do dedo — esse não teve pointerdown nela.
+ * detail 0 é Enter/espaço no botão focado.
+ */
+export function isIntentionalAnswerClick(detail: number, receivedPointerDown: boolean): boolean {
+  return detail === 0 || receivedPointerDown;
+}
