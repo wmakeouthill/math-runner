@@ -345,7 +345,7 @@ final.
 
 ## 8. Controles
 
-**PC:** `← →` ou `A D` mover · `Espaço` / `W` / `↑` pular · `↑` / `E` interagir ·
+**PC:** `← →` ou `A D` mover · `Espaço` / `W` / `↑` pular · `E` / `Enter` interagir ·
 `1–4` responder · `Esc` pausar.
 
 **Celular (paisagem):** metade esquerda da tela = d-pad virtual; metade direita

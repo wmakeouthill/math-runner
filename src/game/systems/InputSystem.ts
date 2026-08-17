@@ -6,6 +6,7 @@ export type InputState = {
   right: boolean;
   jumpJustPressed: boolean;
   jumpJustReleased: boolean;
+  interactJustPressed: boolean;
 };
 
 export class InputSystem {
@@ -13,10 +14,13 @@ export class InputSystem {
   private readonly keyA: Phaser.Input.Keyboard.Key;
   private readonly keyD: Phaser.Input.Keyboard.Key;
   private readonly keySpace: Phaser.Input.Keyboard.Key;
+  private readonly keyE: Phaser.Input.Keyboard.Key;
+  private readonly keyEnter: Phaser.Input.Keyboard.Key;
   /** pointer.id → ação que aquele dedo está segurando. */
   private readonly touches = new Map<number, TouchAction>();
   private touchJumpPressed = false;
   private touchJumpReleased = false;
+  private touchInteractPressed = false;
 
   private readonly scene: Phaser.Scene;
 
@@ -29,6 +33,8 @@ export class InputSystem {
     this.keyA = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     this.keyD = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
     this.keySpace = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.keyE = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.keyEnter = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
     scene.input.addPointer(3);
     scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown, this);
@@ -36,9 +42,13 @@ export class InputSystem {
   }
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
-    const action = touchZone(pointer.x, this.scene.scale.width);
+    const action = touchZone(pointer.x, pointer.y, {
+      width: this.scene.scale.width,
+      height: this.scene.scale.height,
+    });
     this.touches.set(pointer.id, action);
     if (action === 'jump') this.touchJumpPressed = true;
+    if (action === 'action') this.touchInteractPressed = true;
   }
 
   private onPointerUp(pointer: Phaser.Input.Pointer): void {
@@ -60,11 +70,13 @@ export class InputSystem {
       left: this.cursors.left.isDown || this.keyA.isDown || this.isTouching('left'),
       right: this.cursors.right.isDown || this.keyD.isDown || this.isTouching('right'),
       jumpJustPressed:
-        jumpKeys.some((key) => Phaser.Input.Keyboard.JustDown(key)) ||
-        this.touchJumpPressed,
+        jumpKeys.some((key) => Phaser.Input.Keyboard.JustDown(key)) || this.touchJumpPressed,
       jumpJustReleased:
-        jumpKeys.some((key) => Phaser.Input.Keyboard.JustUp(key)) ||
-        this.touchJumpReleased,
+        jumpKeys.some((key) => Phaser.Input.Keyboard.JustUp(key)) || this.touchJumpReleased,
+      interactJustPressed:
+        Phaser.Input.Keyboard.JustDown(this.keyE) ||
+        Phaser.Input.Keyboard.JustDown(this.keyEnter) ||
+        this.touchInteractPressed,
     };
   }
 
@@ -72,6 +84,7 @@ export class InputSystem {
   endFrame(): void {
     this.touchJumpPressed = false;
     this.touchJumpReleased = false;
+    this.touchInteractPressed = false;
   }
 
   destroy(): void {
