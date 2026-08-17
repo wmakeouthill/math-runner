@@ -36,8 +36,8 @@ export const LEVEL_1_2: LevelSpec = {
     {
       kind: 'porta',
       id: 'porta-1-2',
-      op: '+',
-      tier: 2,
+      op: '-',
+      tier: 1,
       panel: { x: 2400, y: 450 },
     },
   ],

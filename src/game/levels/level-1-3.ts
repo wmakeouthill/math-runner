@@ -25,7 +25,7 @@ export const LEVEL_1_3: LevelSpec = {
     {
       kind: 'ponte',
       id: 'ponte-1-3',
-      op: '+',
+      op: '-',
       tier: 2,
       panel: { x: 650, y: 450 },
       // fecha o vão 760 … 1000
@@ -42,8 +42,8 @@ export const LEVEL_1_3: LevelSpec = {
     {
       kind: 'porta',
       id: 'porta-1-3',
-      op: '+',
-      tier: 3,
+      op: '*',
+      tier: 1,
       panel: { x: 3000, y: 450 },
     },
   ],
@@ -59,7 +59,7 @@ export const LEVEL_1_3: LevelSpec = {
     { x: 2500, y: 450 },
   ],
   guardians: [
-    { id: 'saci-1-3', at: { x: 1300, y: 450 }, op: '+', tier: 2 },
-    { id: 'saci-1-3b', at: { x: 2100, y: 300 }, op: '+', tier: 2 },
+    { id: 'saci-1-3', at: { x: 1300, y: 450 }, op: '*', tier: 1 },
+    { id: 'saci-1-3b', at: { x: 2100, y: 300 }, op: '/', tier: 1 },
   ],
 };
