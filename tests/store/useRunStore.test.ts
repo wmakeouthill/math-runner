@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MAX_HEARTS, starsFor, useRunStore } from '@/store/useRunStore';
 import { useGameStore } from '@/store/useGameStore';
+import { DIFFICULTY } from '@/game/math/difficulty';
 
 describe('starsFor', () => {
   it('só terminar já vale uma estrela', () => {
@@ -113,5 +114,28 @@ describe('corações do modo Aventura', () => {
     useRunStore.getState().loseHeart();
     useRunStore.getState().begin('1-3', 0);
     expect(useRunStore.getState().hearts).toBe(MAX_HEARTS);
+  });
+
+  /**
+   * O HUD desenha os corações contra a dificuldade escolhida. Se a partida
+   * ignorar a escolha, o jogador entra no Difícil já com um coração apagado.
+   */
+  it('a dificuldade escolhida decide quantos corações a partida dá', () => {
+    useGameStore.getState().setDifficulty('dificil');
+    useRunStore.getState().begin('1-2', 0);
+    expect(useRunStore.getState().hearts).toBe(DIFFICULTY.dificil.hearts);
+
+    useGameStore.getState().setDifficulty('facil');
+    useRunStore.getState().begin('1-2', 0);
+    expect(useRunStore.getState().hearts).toBe(DIFFICULTY.facil.hearts);
+  });
+
+  it('voltar para a bandeira no difícil devolve os dois, não três', () => {
+    useGameStore.getState().setDifficulty('dificil');
+    useRunStore.getState().begin('1-2', 0);
+    useRunStore.getState().loseHeart();
+    useRunStore.getState().refillHearts();
+    expect(useRunStore.getState().hearts).toBe(DIFFICULTY.dificil.hearts);
+    useGameStore.getState().setDifficulty('facil');
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/useGameStore';
-import { MAX_HEARTS, useRunStore } from '@/store/useRunStore';
+import { useRunStore } from '@/store/useRunStore';
+import { DIFFICULTY } from '@/game/math/difficulty';
 import { levelById } from '@/game/levels';
 import { formatTime } from '@/app/time';
 import { styles } from './Hud.styles';
@@ -24,6 +25,7 @@ export function Hud() {
   const muted = useGameStore((state) => state.muted);
   const toggleMuted = useGameStore((state) => state.toggleMuted);
   const mode = useGameStore((state) => state.mode);
+  const difficulty = useGameStore((state) => state.difficulty);
   const levelId = useGameStore((state) => state.currentLevel);
   const digitsTaken = useRunStore((state) => state.digitsTaken);
   const digitsTotal = useRunStore((state) => state.digitsTotal);
@@ -34,6 +36,10 @@ export function Hud() {
 
   const elapsed = useElapsed(startedAt, result === null);
   const level = levelById(levelId);
+  // Quantos corações a dificuldade dá. No Difícil são 2, não 3 — desenhar
+  // sempre 3 fazia a partida começar com um coração apagado, como se o jogador
+  // já tivesse errado.
+  const totalHearts = DIFFICULTY[difficulty].hearts;
 
   return (
     <div style={styles.bar}>
@@ -44,7 +50,7 @@ export function Hud() {
       {mode === 'aventura' && (
         <span style={styles.hearts}>
           {'❤'.repeat(hearts)}
-          {'🖤'.repeat(MAX_HEARTS - hearts)}
+          {'🖤'.repeat(Math.max(0, totalHearts - hearts))}
         </span>
       )}
       <span style={styles.digits}>
