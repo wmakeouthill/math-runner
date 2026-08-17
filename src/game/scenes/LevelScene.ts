@@ -5,6 +5,7 @@ import { InputSystem } from '@/game/systems/InputSystem';
 import { levelById, LEVEL_ORDER } from '@/game/levels';
 import type { LevelSpec, PlatformSpec, Point } from '@/game/levels/reach';
 import { FLIGHT } from '@/game/levels/reach';
+import type { Op } from '@/game/math/mathEngine.types';
 import { PLAYER_HEIGHT, PLAYER_WIDTH } from '@/game/art/characterTexture';
 import { ensurePlayerAnims, ensureWingAnims, syncPlayerVisuals } from '@/game/art/characterAnims';
 import type { CharacterId } from '@/store/useGameStore.types';
@@ -30,6 +31,12 @@ import { burst } from '@/game/art/spark';
 
 /** Tempo que a porta leva para abrir antes de a tela de resultado subir. */
 const DOOR_MS = 620;
+
+/** As operações que a fase usa. O chefe cobra do que a fase ensinou. */
+function pickOp(level: LevelSpec): Op {
+  const ops = [...new Set(level.mechanisms.map((m) => m.op))];
+  return ops[Math.floor(Math.random() * ops.length)] ?? '+';
+}
 
 export class LevelScene extends Phaser.Scene {
   private level: LevelSpec = LEVEL_ORDER[0];
@@ -160,9 +167,17 @@ export class LevelScene extends Phaser.Scene {
 
       if (outcome.correct) {
         playSfx('certo');
+        useChallengeStore.getState().close();
+
+        if (!guardian.scoreRound()) {
+          // Chefe ainda de pé: a próxima conta vem na hora, sem sair do lugar.
+          burst(this, guardian.at.x, guardian.at.y - 20, toPhaserColor(PALETTE.gold), 10);
+          this.time.delayedCall(420, () => this.askGuardian(guardian.id));
+          return;
+        }
+
         guardian.defeat();
         burst(this, guardian.at.x, guardian.at.y, toPhaserColor(PALETTE.cyan), 24);
-        useChallengeStore.getState().close();
         return;
       }
 
@@ -260,6 +275,21 @@ export class LevelScene extends Phaser.Scene {
     useChallengeStore.getState().open(mechanism.id, generateQuestion(mechanism.op, tier));
   }
 
+  /** Abre a conta de um monstro. O chefe sorteia a operação a cada rodada. */
+  private askGuardian(id: string): void {
+    const spec = this.level.guardians.find((item) => item.id === id);
+    if (!spec) return;
+
+    const { playerTier, difficulty } = useGameStore.getState();
+    // O Curupira cobra as quatro operações; o resto cobra a sua.
+    const op = spec.kind === 'curupira' ? pickOp(this.level) : spec.op;
+    const player = playerTier[op];
+    if (player === undefined) return;
+    const tier = effectiveTier(spec.tier, player, difficulty);
+
+    useChallengeStore.getState().open(spec.id, generateQuestion(op, tier));
+  }
+
   override update(_time: number, delta: number): void {
     const state = this.controls.read();
 
@@ -293,13 +323,7 @@ export class LevelScene extends Phaser.Scene {
 
     for (const guardian of this.guardians.values()) {
       if (!guardian.isBlocking(this.player.x, this.player.y)) continue;
-      const spec = this.level.guardians.find((item) => item.id === guardian.id);
-      if (!spec) continue;
-      const { playerTier, difficulty } = useGameStore.getState();
-      const player = playerTier[spec.op];
-      if (player === undefined) continue;
-      const tier = effectiveTier(spec.tier, player, difficulty);
-      useChallengeStore.getState().open(spec.id, generateQuestion(spec.op, tier));
+      this.askGuardian(guardian.id);
       break;
     }
 

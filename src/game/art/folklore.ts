@@ -25,3 +25,6 @@ export const FOLK_NAME: Record<FolkKind, string> = {
   boto: 'Boto-cor-de-rosa',
   curupira: 'Curupira',
 };
+
+/** Contas seguidas que o chefe cobra antes de ser derrotado. */
+export const BOSS_ROUNDS = 3;

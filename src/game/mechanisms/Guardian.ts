@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Point } from '@/game/levels/reach';
 import { drawFolk } from '@/game/art/folkloreDraw';
-import type { FolkKind } from '@/game/art/folklore';
+import { BOSS_ROUNDS, type FolkKind } from '@/game/art/folklore';
 
 const REACH_X = 52;
 const REACH_Y = 80;
@@ -18,12 +18,14 @@ export class Guardian {
   private readonly scene: Phaser.Scene;
   private readonly body: Phaser.GameObjects.Container;
   private defeated = false;
+  private rounds: number;
 
   constructor(scene: Phaser.Scene, id: string, at: Point, kind: FolkKind) {
     this.scene = scene;
     this.id = id;
     this.at = at;
     this.kind = kind;
+    this.rounds = kind === 'curupira' ? BOSS_ROUNDS : 1;
 
     const { dust, figure } = drawFolk(scene, kind);
     // O chefe é maior que os outros — dá para ver de longe que ele é diferente.
@@ -86,6 +88,17 @@ export class Guardian {
       ease: 'Quad.easeIn',
       onComplete: () => this.body.destroy(),
     });
+  }
+
+  /** Uma conta certa a menos. Devolve true quando o monstro cai de vez. */
+  scoreRound(): boolean {
+    this.rounds = Math.max(0, this.rounds - 1);
+    return this.rounds === 0;
+  }
+
+  /** Quantas contas ainda faltam. O HUD do chefe mostra isso. */
+  get roundsLeft(): number {
+    return this.rounds;
   }
 
   /** O jogador errou: o monstro rodopia comemorando. */

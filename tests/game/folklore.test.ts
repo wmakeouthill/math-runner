@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FOLK_KINDS, FOLK_OP } from '@/game/art/folklore';
+import { BOSS_ROUNDS, FOLK_KINDS, FOLK_OP } from '@/game/art/folklore';
 import { LEVEL_ORDER } from '@/game/levels';
 
 describe('operação de cada monstro', () => {
@@ -28,5 +28,25 @@ describe('monstros nas fases', () => {
   it('o mundo 1 não repete o mesmo monstro em todas as fases', () => {
     const kinds = new Set(LEVEL_ORDER.flatMap((l) => l.guardians.map((g) => g.kind)));
     expect(kinds.size).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('o chefe', () => {
+  it('o Curupira aparece uma vez só, e é na última fase', () => {
+    const bosses = LEVEL_ORDER.flatMap((level) =>
+      level.guardians.filter((g) => g.kind === 'curupira').map(() => level.id),
+    );
+    expect(bosses).toEqual(['1-5']);
+  });
+
+  it('o chefe cobra mais de uma conta', () => {
+    expect(BOSS_ROUNDS).toBeGreaterThan(1);
+  });
+
+  it('o chefe fica antes da porta, não depois', () => {
+    const fase = LEVEL_ORDER.find((level) => level.id === '1-5');
+    const chefe = fase?.guardians.find((g) => g.kind === 'curupira');
+    const porta = fase?.mechanisms.find((m) => m.kind === 'porta');
+    expect(chefe && porta && chefe.at.x < porta.panel.x).toBe(true);
   });
 });
