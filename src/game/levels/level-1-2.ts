@@ -16,7 +16,7 @@ export const LEVEL_1_2: LevelSpec = {
   name: 'Feira do Bairro',
   theme: 'feira',
   spawn: { x: 220, y: GROUND_Y - 140 },
-  worldWidth: 2600,
+  worldWidth: 3600,
   platforms: [
     // chão inicial. 130 … 820
     { x: 475, y: GROUND_Y, width: 690, height: 40 },
@@ -24,6 +24,9 @@ export const LEVEL_1_2: LevelSpec = {
     { x: 1325, y: GROUND_Y - 150, width: 750, height: 40 },
     // chão final. 1780 … 2500
     { x: 2140, y: GROUND_Y, width: 720, height: 40 },
+    { x: 2710, y: 420, width: 180, height: 40 },
+    { x: 2990, y: 340, width: 180, height: 40 },
+    { x: 3330, y: 500, width: 340, height: 40 },
   ],
   mechanisms: [
     {
@@ -41,7 +44,7 @@ export const LEVEL_1_2: LevelSpec = {
       id: 'porta-1-2',
       op: '-',
       tier: 1,
-      panel: { x: 2400, y: 450 },
+      panel: { x: 3400, y: 450 },
     },
   ],
   digits: [
@@ -49,7 +52,11 @@ export const LEVEL_1_2: LevelSpec = {
     { x: 904, y: 360 },
     { x: 1200, y: 280 },
     { x: 2200, y: 430 },
+    { x: 2990, y: 290 },
   ],
-  checkpoints: [{ x: 1050, y: 300 }],
+  checkpoints: [
+    { x: 1050, y: 300 },
+    { x: 3210, y: 450 },
+  ],
   guardians: [{ id: 'saci-1-2', kind: 'saci', at: { x: 1450, y: 300 }, op: '+', tier: 1 }],
 };

@@ -14,7 +14,7 @@ export const LEVEL_1_4: LevelSpec = {
   name: 'Travessia do Sertão',
   theme: 'sertao',
   spawn: { x: 220, y: GROUND_Y - 140 },
-  worldWidth: 3400,
+  worldWidth: 4400,
   platforms: [
     // chão inicial. 130 … 900
     { x: 515, y: GROUND_Y, width: 770, height: 40 },
@@ -24,6 +24,9 @@ export const LEVEL_1_4: LevelSpec = {
     { x: 2300, y: GROUND_Y - 280, width: 600, height: 40 },
     // chão final. 2700 … 3300
     { x: 3000, y: GROUND_Y, width: 600, height: 40 },
+    { x: 3500, y: 420, width: 160, height: 40 },
+    { x: 3760, y: 330, width: 160, height: 40 },
+    { x: 4110, y: 500, width: 380, height: 40 },
   ],
   mechanisms: [
     {
@@ -48,7 +51,7 @@ export const LEVEL_1_4: LevelSpec = {
       id: 'porta-1-4',
       op: '/',
       tier: 1,
-      panel: { x: 3200, y: 450 },
+      panel: { x: 4200, y: 450 },
     },
   ],
   digits: [
@@ -57,10 +60,12 @@ export const LEVEL_1_4: LevelSpec = {
     { x: 1700, y: 430 },
     { x: 2300, y: 150 },
     { x: 2900, y: 430 },
+    { x: 3760, y: 280 },
   ],
   checkpoints: [
     { x: 1300, y: 450 },
     { x: 2050, y: 170 },
+    { x: 3990, y: 450 },
   ],
   guardians: [
     { id: 'cuca-1-4', kind: 'cuca', at: { x: 1500, y: 450 }, op: '-', tier: 1 },

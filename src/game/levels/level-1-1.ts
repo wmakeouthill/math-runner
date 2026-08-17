@@ -17,7 +17,7 @@ export const LEVEL_1_1: LevelSpec = {
   name: 'Quintal da Escola',
   theme: 'quintal',
   spawn: { x: 220, y: GROUND_Y - 140 },
-  worldWidth: 2700,
+  worldWidth: 3600,
   platforms: [
     // chão inicial — o jogador nasce aqui. 130 … 900
     { x: 515, y: GROUND_Y, width: 770, height: 40 },
@@ -31,6 +31,9 @@ export const LEVEL_1_1: LevelSpec = {
     { x: 2265, y: GROUND_Y, width: 670, height: 40 },
     // degrau do número escondido. 2280 … 2420
     { x: 2350, y: GROUND_Y - 90, width: 140, height: 24 },
+    { x: 2770, y: 410, width: 140, height: 40 },
+    { x: 3010, y: 320, width: 140, height: 40 },
+    { x: 3330, y: 500, width: 340, height: 40 },
   ],
   mechanisms: [
     {
@@ -47,7 +50,7 @@ export const LEVEL_1_1: LevelSpec = {
       id: 'porta-1-1',
       op: '+',
       tier: 2,
-      panel: { x: 2520, y: 450 },
+      panel: { x: 3400, y: 450 },
     },
   ],
   digits: [
@@ -55,7 +58,11 @@ export const LEVEL_1_1: LevelSpec = {
     { x: 1560, y: 280 },
     { x: 2100, y: 430 },
     { x: 2350, y: 350 },
+    { x: 3010, y: 270 },
   ],
-  checkpoints: [{ x: 1200, y: 450 }],
+  checkpoints: [
+    { x: 1200, y: 450 },
+    { x: 3210, y: 450 },
+  ],
   guardians: [],
 };

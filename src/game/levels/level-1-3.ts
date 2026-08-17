@@ -11,7 +11,7 @@ export const LEVEL_1_3: LevelSpec = {
   name: 'Festa Junina no Pátio',
   theme: 'festa',
   spawn: { x: 220, y: GROUND_Y - 140 },
-  worldWidth: 3200,
+  worldWidth: 4200,
   platforms: [
     // chão inicial. 130 … 760
     { x: 445, y: GROUND_Y, width: 630, height: 40 },
@@ -21,6 +21,9 @@ export const LEVEL_1_3: LevelSpec = {
     { x: 1965, y: GROUND_Y - 150, width: 670, height: 40 },
     // chão final. 2380 … 3100
     { x: 2740, y: GROUND_Y, width: 720, height: 40 },
+    { x: 3300, y: 410, width: 160, height: 40 },
+    { x: 3560, y: 320, width: 160, height: 40 },
+    { x: 3910, y: 500, width: 380, height: 40 },
   ],
   mechanisms: [
     {
@@ -46,7 +49,7 @@ export const LEVEL_1_3: LevelSpec = {
       id: 'porta-1-3',
       op: '*',
       tier: 1,
-      panel: { x: 3000, y: 450 },
+      panel: { x: 4000, y: 450 },
     },
   ],
   digits: [
@@ -55,10 +58,12 @@ export const LEVEL_1_3: LevelSpec = {
     { x: 1584, y: 360 },
     { x: 1900, y: 280 },
     { x: 2800, y: 430 },
+    { x: 3560, y: 270 },
   ],
   checkpoints: [
     { x: 1100, y: 450 },
     { x: 2500, y: 450 },
+    { x: 3790, y: 450 },
   ],
   guardians: [
     // saiu de 1300: lá ele ficava em cima do painel dos blocos, os dois

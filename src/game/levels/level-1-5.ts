@@ -15,7 +15,7 @@ export const LEVEL_1_5: LevelSpec = {
   name: 'Mata do Curupira',
   theme: 'mata',
   spawn: { x: 220, y: GROUND_Y - 140 },
-  worldWidth: 4200,
+  worldWidth: 5200,
   platforms: [
     // chão inicial. 130 … 800
     { x: 465, y: GROUND_Y, width: 670, height: 40 },
@@ -27,6 +27,9 @@ export const LEVEL_1_5: LevelSpec = {
     { x: 2800, y: GROUND_Y - 410, width: 600, height: 40 },
     // chão do portão. 3200 … 4000
     { x: 3600, y: GROUND_Y, width: 800, height: 40 },
+    { x: 4210, y: 410, width: 180, height: 40 },
+    { x: 4490, y: 320, width: 180, height: 40 },
+    { x: 4880, y: 500, width: 440, height: 40 },
   ],
   mechanisms: [
     {
@@ -60,7 +63,7 @@ export const LEVEL_1_5: LevelSpec = {
       id: 'porta-1-5',
       op: '/',
       tier: 2,
-      panel: { x: 3850, y: 450 },
+      panel: { x: 5000, y: 450 },
     },
   ],
   digits: [
@@ -70,10 +73,12 @@ export const LEVEL_1_5: LevelSpec = {
     { x: 2200, y: 280 },
     { x: 2800, y: 20 },
     { x: 3700, y: 430 },
+    { x: 4490, y: 270 },
   ],
   checkpoints: [
     { x: 1400, y: 300 },
     { x: 2550, y: 40 },
+    { x: 4760, y: 450 },
   ],
   guardians: [
     { id: 'cuca-1-5', kind: 'cuca', at: { x: 1300, y: 300 }, op: '-', tier: 2 },
