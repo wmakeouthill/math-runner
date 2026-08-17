@@ -1,4 +1,5 @@
 import { GAME_FEEL } from '@/game/constants';
+import { MIN_ANSWER } from '@/game/math/mathEngine';
 import type { Op, Tier } from '@/game/math/mathEngine.types';
 
 export type PlatformSpec = {
@@ -8,27 +9,71 @@ export type PlatformSpec = {
   height: number;
 };
 
-export type MechanismSpec = {
+export type Point = { x: number; y: number };
+
+/** O que o mecanismo entrega quando a conta é respondida certo. */
+export type MechanismEffect =
+  /** Uma ponte levadiça desce e fecha um buraco largo demais para pular. */
+  | { kind: 'ponte'; platform: PlatformSpec }
+  /** Uma escada de blocos aparece: um bloco por unidade da resposta. */
+  | { kind: 'blocos'; origin: Point }
+  /** A porta da fase abre e a fase termina. */
+  | { kind: 'porta' };
+
+export type MechanismSpec = MechanismEffect & {
   /** Liga painel, resposta e mecanismo. Único dentro da fase. */
   id: string;
   op: Op;
   tier: Tier;
   /** Onde fica o Painel de Cálculo. */
-  panel: { x: number; y: number };
-  /** A plataforma que o mecanismo entrega quando a conta é respondida certo. */
-  platform: PlatformSpec;
+  panel: Point;
 };
 
 export type LevelSpec = {
-  spawn: { x: number; y: number };
+  id: string;
+  name: string;
+  spawn: Point;
   worldWidth: number;
   platforms: readonly PlatformSpec[];
   mechanisms: readonly MechanismSpec[];
+  /** Números dourados. Pegar todos vale uma estrela. */
+  digits: readonly Point[];
+  /** Bandeiras: morrer devolve o jogador à última que ele tocou. */
+  checkpoints: readonly Point[];
 };
+
+/** Tamanho e passo dos blocos da escada. */
+export const BLOCK = { size: 40, stepX: 44, stepY: 40 } as const;
+
+/** A escada que `count` blocos formam a partir da origem, degrau a degrau. */
+export function blockStair(origin: Point, count: number): PlatformSpec[] {
+  const steps: PlatformSpec[] = [];
+  for (let i = 0; i < count; i += 1) {
+    steps.push({
+      x: origin.x + i * BLOCK.stepX,
+      y: origin.y - (i + 1) * BLOCK.stepY + BLOCK.size / 2,
+      width: BLOCK.size,
+      height: BLOCK.size,
+    });
+  }
+  return steps;
+}
+
+/** O chão que o mecanismo acrescenta — no pior caso, para os blocos. */
+function mechanismPlatforms(mechanism: MechanismSpec): readonly PlatformSpec[] {
+  switch (mechanism.kind) {
+    case 'ponte':
+      return [mechanism.platform];
+    case 'blocos':
+      return blockStair(mechanism.origin, MIN_ANSWER[mechanism.op]);
+    case 'porta':
+      return [];
+  }
+}
 
 /** Tudo em que dá para pisar depois que os mecanismos foram acionados. */
 export function allPlatforms(level: LevelSpec): readonly PlatformSpec[] {
-  return [...level.platforms, ...level.mechanisms.map((mechanism) => mechanism.platform)];
+  return [...level.platforms, ...level.mechanisms.flatMap(mechanismPlatforms)];
 }
 
 const airtimeSeconds =
@@ -106,17 +151,31 @@ export function reachablePlatforms(level: LevelSpec): ReadonlySet<number> {
 }
 
 /**
- * Um painel fora de alcance é um jogo travado. Ele precisa estar em cima de uma
- * plataforma que o jogador consegue pisar, e a poucos pixels acima dela.
+ * Um painel fora de alcance é um jogo travado. Vale para painéis, números
+ * dourados e bandeiras: o ponto precisa estar sobre uma plataforma que o
+ * jogador consegue pisar, e a poucos pixels acima dela.
  */
-export function panelIsReachable(level: LevelSpec, panel: { x: number; y: number }): boolean {
+export function pointIsReachable(level: LevelSpec, point: Point): boolean {
   const reached = reachablePlatforms(level);
 
   return allPlatforms(level).some((platform, index) => {
     if (!reached.has(index)) return false;
-    if (panel.x < leftOf(platform) || panel.x > rightOf(platform)) return false;
+    if (point.x < leftOf(platform) || point.x > rightOf(platform)) return false;
 
-    const above = topOf(platform) - panel.y;
+    const above = topOf(platform) - point.y;
     return above >= 0 && above <= SAFE_STEP;
   });
+}
+
+/**
+ * Tudo o que a fase pede que o jogador toque e ele não consegue.
+ * Lista vazia = fase jogável do começo ao fim.
+ */
+export function unreachablePoints(level: LevelSpec): readonly Point[] {
+  const required = [
+    ...level.mechanisms.map((mechanism) => mechanism.panel),
+    ...level.digits,
+    ...level.checkpoints,
+  ];
+  return required.filter((point) => !pointIsReachable(level, point));
 }

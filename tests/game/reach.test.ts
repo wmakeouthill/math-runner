@@ -1,16 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { LEVEL_ORDER } from '@/game/levels';
 import { LEVEL_1_1 } from '@/game/levels/level-1-1';
 import {
   allPlatforms,
+  blockStair,
   canReach,
   horizontalGap,
-  panelIsReachable,
+  pointIsReachable,
   reachablePlatforms,
   spawnPlatformIndex,
   topOf,
+  unreachablePoints,
   JUMP_REACH,
   SAFE_GAP,
   SAFE_STEP,
+  type LevelSpec,
   type PlatformSpec,
 } from '@/game/levels/reach';
 
@@ -68,38 +72,78 @@ describe('horizontalGap', () => {
   });
 });
 
-describe('fase 1-1', () => {
-  it('o jogador nasce em cima de uma plataforma, não no vácuo', () => {
-    expect(spawnPlatformIndex(LEVEL_1_1)).toBeGreaterThanOrEqual(0);
+describe('escada de blocos', () => {
+  const origem = { x: 500, y: 480 };
+
+  it('empilha um bloco por unidade da resposta', () => {
+    expect(blockStair(origem, 3)).toHaveLength(3);
+    expect(blockStair(origem, 0)).toHaveLength(0);
   });
 
-  /**
-   * O invariante é "alcançável **com os mecanismos acionados**": a plataforma
-   * que a ponte entrega entra na conta. É por isso que `allPlatforms` existe.
-   */
+  it('o primeiro degrau sai do chão de onde a escada nasce', () => {
+    const primeiro = blockStair(origem, 1)[0];
+    expect(primeiro).toBeDefined();
+    if (!primeiro) return;
+    expect(origem.y - topOf(primeiro)).toBeLessThanOrEqual(SAFE_STEP);
+  });
+
+  it('cada degrau alcança o seguinte, por mais alta que a escada fique', () => {
+    const degraus = blockStair(origem, 12);
+    degraus.forEach((degrau, index) => {
+      const anterior = degraus[index - 1];
+      if (!anterior) return;
+      expect(canReach(anterior, degrau)).toBe(true);
+    });
+  });
+});
+
+/**
+ * O invariante é "alcançável **com os mecanismos acionados**": a plataforma que
+ * a ponte entrega e a escada mais curta que os blocos podem formar entram na
+ * conta. É por isso que `allPlatforms` existe.
+ */
+describe.each(LEVEL_ORDER)('fase $id — $name', (fase: LevelSpec) => {
+  it('o jogador nasce em cima de uma plataforma, não no vácuo', () => {
+    expect(spawnPlatformIndex(fase)).toBeGreaterThanOrEqual(0);
+  });
+
   it('toda plataforma da fase é alcançável a partir do nascimento', () => {
-    const alcancadas = reachablePlatforms(LEVEL_1_1);
-    const perdidas = allPlatforms(LEVEL_1_1)
+    const alcancadas = reachablePlatforms(fase);
+    const perdidas = allPlatforms(fase)
       .map((platform, index) => ({ index, topo: topOf(platform) }))
       .filter(({ index }) => !alcancadas.has(index));
 
     expect(perdidas).toEqual([]);
   });
 
-  it('sem a ponte, o buraco é largo demais para qualquer pulo', () => {
-    const chaoInicial = LEVEL_1_1.platforms[0];
-    const chaoFinal = LEVEL_1_1.platforms[1];
-    expect(chaoInicial).toBeDefined();
-    expect(chaoFinal).toBeDefined();
-    if (!chaoInicial || !chaoFinal) return;
-
-    expect(horizontalGap(chaoInicial, chaoFinal)).toBeGreaterThan(JUMP_REACH.maxDistance);
+  it('painéis, números dourados e bandeiras dão para alcançar a pé', () => {
+    expect(unreachablePoints(fase)).toEqual([]);
   });
 
-  it('todo painel de cálculo dá para alcançar a pé', () => {
-    expect(LEVEL_1_1.mechanisms.length).toBeGreaterThan(0);
-    for (const mechanism of LEVEL_1_1.mechanisms) {
-      expect(panelIsReachable(LEVEL_1_1, mechanism.panel)).toBe(true);
-    }
+  it('tem uma porta de saída', () => {
+    expect(fase.mechanisms.some((mechanism) => mechanism.kind === 'porta')).toBe(true);
+  });
+
+  it('sem os mecanismos a fase trava — eles não são enfeite', () => {
+    const semMecanismos: LevelSpec = { ...fase, mechanisms: [] };
+    expect(unreachablePoints(semMecanismos).length).toBeGreaterThan(0);
+  });
+});
+
+describe('fase 1-1', () => {
+  it('sem a ponte, o buraco é largo demais para qualquer pulo', () => {
+    const chaoInicial = LEVEL_1_1.platforms[0];
+    const chaoDoMeio = LEVEL_1_1.platforms[1];
+    expect(chaoInicial).toBeDefined();
+    expect(chaoDoMeio).toBeDefined();
+    if (!chaoInicial || !chaoDoMeio) return;
+
+    expect(horizontalGap(chaoInicial, chaoDoMeio)).toBeGreaterThan(JUMP_REACH.maxDistance);
+  });
+});
+
+describe('pointIsReachable', () => {
+  it('recusa um ponto pendurado no ar, longe de qualquer plataforma', () => {
+    expect(pointIsReachable(LEVEL_1_1, { x: 1000, y: 100 })).toBe(false);
   });
 });

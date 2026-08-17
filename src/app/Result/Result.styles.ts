@@ -1,0 +1,88 @@
+import type { CSSProperties } from 'react';
+import { PALETTE } from '@/theme/palette';
+
+export const styles = {
+  // Cobre o canvas sem tirá-lo da tela: a fase vencida fica de fundo.
+  backdrop: {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1rem',
+    background: `${PALETTE.night}cc`,
+    backdropFilter: 'blur(2px)',
+  },
+  card: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    width: 'min(360px, 92vw)',
+    padding: '1.4rem 1.6rem',
+    textAlign: 'center',
+    background: PALETTE.deep,
+    border: `2px solid ${PALETTE.steel}`,
+    borderRadius: '1.2rem',
+    boxShadow: `0 18px 50px ${PALETTE.night}`,
+    animation: 'subir 320ms ease-out both',
+  },
+  banner: {
+    fontSize: '1.5rem',
+    fontWeight: 800,
+    letterSpacing: '0.06em',
+    color: PALETTE.cyan,
+  },
+  levelName: {
+    fontSize: '0.85rem',
+    color: PALETTE.mute,
+  },
+  stars: {
+    display: 'flex',
+    gap: '0.3rem',
+    margin: '0.4rem 0',
+    fontSize: '2.6rem',
+    lineHeight: 1,
+  },
+  star: { color: PALETTE.gold },
+  starOff: { color: PALETTE.steel },
+  lines: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.15rem',
+    fontSize: '0.9rem',
+    color: PALETTE.ink,
+  },
+  missing: {
+    fontSize: '0.8rem',
+    color: PALETTE.faint,
+  },
+  actions: {
+    display: 'flex',
+    gap: '0.6rem',
+    width: '100%',
+    marginTop: '0.9rem',
+  },
+  primary: {
+    flex: 1,
+    padding: '0.75rem 0.8rem',
+    fontSize: '0.95rem',
+    fontWeight: 800,
+    color: PALETTE.night,
+    background: PALETTE.cyan,
+    border: 'none',
+    borderRadius: '999px',
+    cursor: 'pointer',
+  },
+  secondary: {
+    flex: 1,
+    padding: '0.75rem 0.8rem',
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    color: PALETTE.ink,
+    background: 'transparent',
+    border: `2px solid ${PALETTE.steel}`,
+    borderRadius: '999px',
+    cursor: 'pointer',
+  },
+} satisfies Record<string, CSSProperties>;

@@ -11,3 +11,19 @@ body {
 }
 
 button { font-family: inherit; }
+
+/* Fim de fase: o painel sobe e cada estrela estoura na vez dela. */
+@keyframes subir {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes estourar {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-25deg); }
+  70%  { opacity: 1; transform: scale(1.25) rotate(6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 1ms !important; }
+}

@@ -2,24 +2,38 @@ import Phaser from 'phaser';
 import { GAME_FEEL, GAME_SIZE } from '@/game/constants';
 import { JumpController } from '@/game/systems/JumpController';
 import { InputSystem } from '@/game/systems/InputSystem';
-import { LEVEL_1_1 } from '@/game/levels/level-1-1';
-import type { PlatformSpec } from '@/game/levels/reach';
+import { levelById, LEVEL_ORDER } from '@/game/levels';
+import type { LevelSpec, PlatformSpec, Point } from '@/game/levels/reach';
 import { ensureCharacterTexture } from '@/game/art/characterTexture';
 import { createBackdrop } from '@/game/art/backdrop';
 import { CalcPanel } from '@/game/mechanisms/CalcPanel';
 import { Bridge } from '@/game/mechanisms/Bridge';
+import { Blocks } from '@/game/mechanisms/Blocks';
+import { GoldenDigit } from '@/game/mechanisms/GoldenDigit';
+import { Checkpoint } from '@/game/mechanisms/Checkpoint';
 import { generateQuestion } from '@/game/math/mathEngine';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
 import { useGameStore } from '@/store/useGameStore';
+import { useRunStore } from '@/store/useRunStore';
 import { useChallengeStore } from '@/store/useChallengeStore';
 import type { ChallengeOutcome } from '@/store/useChallengeStore.types';
+import { shouldHandleOutcome } from './challengeOutcome';
+
+/** Tempo que a porta leva para abrir antes de a tela de resultado subir. */
+const DOOR_MS = 620;
 
 export class LevelScene extends Phaser.Scene {
+  private level: LevelSpec = LEVEL_ORDER[0];
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private controls!: InputSystem;
   private readonly jump = new JumpController();
   private readonly panels: CalcPanel[] = [];
   private readonly bridges = new Map<string, Bridge>();
+  private readonly blocks = new Map<string, Blocks>();
+  private readonly digits: GoldenDigit[] = [];
+  private readonly checkpoints: Checkpoint[] = [];
+  /** Anda para a última bandeira tocada. */
+  private spawnPoint: Point = LEVEL_ORDER[0].spawn;
   private unsubscribe: (() => void) | null = null;
 
   constructor() {
@@ -30,20 +44,45 @@ export class LevelScene extends Phaser.Scene {
     // create() roda de novo em scene.restart(); sem isto os painéis duplicam.
     this.panels.length = 0;
     this.bridges.clear();
+    this.blocks.clear();
+    this.digits.length = 0;
+    this.checkpoints.length = 0;
+
+    this.level = levelById(useGameStore.getState().currentLevel) ?? LEVEL_ORDER[0];
+    this.spawnPoint = this.level.spawn;
+    useRunStore.getState().begin(this.level.id, this.level.digits.length);
 
     this.cameras.main.setBackgroundColor(PALETTE.sky);
-    createBackdrop(this, LEVEL_1_1.worldWidth);
+    createBackdrop(this, this.level.worldWidth);
 
     const platforms = this.physics.add.staticGroup();
-    for (const spec of LEVEL_1_1.platforms) this.addPlatform(platforms, spec);
+    for (const spec of this.level.platforms) this.addPlatform(platforms, spec);
 
-    for (const mechanism of LEVEL_1_1.mechanisms) {
-      this.panels.push(new CalcPanel(this, mechanism.id, mechanism.panel.x, mechanism.panel.y));
-      this.bridges.set(mechanism.id, new Bridge(this, platforms, mechanism.platform));
+    for (const mechanism of this.level.mechanisms) {
+      this.panels.push(
+        new CalcPanel(
+          this,
+          mechanism.id,
+          mechanism.panel.x,
+          mechanism.panel.y,
+          mechanism.kind === 'porta' ? 'porta' : 'painel',
+        ),
+      );
+
+      if (mechanism.kind === 'ponte') {
+        this.bridges.set(mechanism.id, new Bridge(this, platforms, mechanism.platform));
+      } else if (mechanism.kind === 'blocos') {
+        this.blocks.set(mechanism.id, new Blocks(this, platforms, mechanism.origin));
+      }
     }
 
+    for (const at of this.level.checkpoints) this.checkpoints.push(new Checkpoint(this, at));
+    this.level.digits.forEach((at, index) => {
+      this.digits.push(new GoldenDigit(this, at, String(index + 1)));
+    });
+
     const textureKey = ensureCharacterTexture(this, useGameStore.getState().character);
-    const { spawn, worldWidth } = LEVEL_1_1;
+    const { spawn, worldWidth } = this.level;
 
     this.player = this.physics.add.sprite(spawn.x, spawn.y, textureKey);
     this.player.setDisplaySize(32, 48);
@@ -56,10 +95,12 @@ export class LevelScene extends Phaser.Scene {
     this.cameras.main.setFollowOffset(-80, 0);
 
     this.controls = new InputSystem(this);
+    this.unsubscribe?.();
     this.unsubscribe = useChallengeStore.subscribe((state, previous) => {
-      if (state.outcome !== null && state.outcome !== previous.outcome) {
-        this.applyOutcome(state.outcome);
+      if (!shouldHandleOutcome(this.sys.isActive(), state.outcome, previous.outcome)) {
+        return;
       }
+      this.applyOutcome(state.outcome);
     });
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -89,13 +130,34 @@ export class LevelScene extends Phaser.Scene {
     );
   }
 
+  /** O destroy do Phaser é no próximo frame; o subscribe precisa sair agora. */
+  detachChallengeListener(): void {
+    this.unsubscribe?.();
+    this.unsubscribe = null;
+  }
+
   private applyOutcome(outcome: ChallengeOutcome): void {
     if (!outcome.correct) {
       this.cameras.main.shake(140, 0.005);
+      useRunStore.getState().addError();
       return;
     }
 
-    this.bridges.get(outcome.source)?.lower();
+    // Mecanismo primeiro: se o setText do painel explodir numa cena
+    // destruída, a ponte da cena viva ainda precisa descer.
+    const mechanism = this.level.mechanisms.find((item) => item.id === outcome.source);
+    switch (mechanism?.kind) {
+      case 'ponte':
+        this.bridges.get(mechanism.id)?.lower();
+        break;
+      case 'blocos':
+        this.blocks.get(mechanism.id)?.raise(outcome.answer);
+        break;
+      case 'porta':
+        this.time.delayedCall(DOOR_MS, () => useRunStore.getState().finish());
+        break;
+    }
+
     for (const panel of this.panels) {
       if (panel.source === outcome.source) panel.markSolved();
     }
@@ -103,7 +165,7 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private openChallenge(panel: CalcPanel): void {
-    const mechanism = LEVEL_1_1.mechanisms.find((item) => item.id === panel.source);
+    const mechanism = this.level.mechanisms.find((item) => item.id === panel.source);
     if (!mechanism) return;
 
     useChallengeStore
@@ -114,11 +176,24 @@ export class LevelScene extends Phaser.Scene {
   override update(_time: number, delta: number): void {
     const state = this.controls.read();
 
-    // Com a conta aberta o mundo para: o card é do rodapé, mas o foco é dele.
-    if (useChallengeStore.getState().challenge !== null) {
+    // Com a conta aberta, ou a fase já vencida, o mundo para.
+    if (
+      useChallengeStore.getState().challenge !== null ||
+      useRunStore.getState().result !== null
+    ) {
       this.player.setVelocityX(0);
       this.controls.endFrame();
       return;
+    }
+
+    for (const digit of this.digits) {
+      if (digit.tryCollect(this.player.x, this.player.y)) useRunStore.getState().takeDigit();
+    }
+
+    for (const flag of this.checkpoints) {
+      if (flag.tryActivate(this.player.x, this.player.y)) {
+        this.spawnPoint = { x: flag.at.x, y: flag.at.y - 40 };
+      }
     }
 
     const nearby = this.panels.filter((panel) =>
@@ -150,8 +225,9 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private respawn(): void {
-    this.player.setPosition(LEVEL_1_1.spawn.x, LEVEL_1_1.spawn.y);
+    this.player.setPosition(this.spawnPoint.x, this.spawnPoint.y);
     this.player.setVelocity(0, 0);
     this.jump.reset();
+    this.cameras.main.flash(180, 20, 30, 70);
   }
 }
