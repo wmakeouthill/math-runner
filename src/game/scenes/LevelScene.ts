@@ -16,6 +16,7 @@ import { GoldenDigit } from '@/game/mechanisms/GoldenDigit';
 import { Checkpoint } from '@/game/mechanisms/Checkpoint';
 import { Guardian } from '@/game/mechanisms/Guardian';
 import { Whirlwind } from '@/game/mechanisms/Whirlwind';
+import { buildLevel } from './buildLevel';
 import { generateQuestion } from '@/game/math/mathEngine';
 import type { Tier } from '@/game/math/mathEngine.types';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
@@ -35,13 +36,14 @@ export class LevelScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private controls!: InputSystem;
   private readonly jump = new JumpController();
-  private readonly panels: CalcPanel[] = [];
-  private readonly bridges = new Map<string, Bridge>();
-  private readonly blocks = new Map<string, Blocks>();
-  private readonly digits: GoldenDigit[] = [];
-  private readonly checkpoints: Checkpoint[] = [];
-  private readonly guardians = new Map<string, Guardian>();
-  private readonly winds = new Map<string, Whirlwind>();
+  private panels: CalcPanel[] = [];
+  private bridges = new Map<string, Bridge>();
+  private blocks = new Map<string, Blocks>();
+  private digits: GoldenDigit[] = [];
+  private flags: Checkpoint[] = [];
+  private guardians = new Map<string, Guardian>();
+  private winds = new Map<string, Whirlwind>();
+  private platforms!: Phaser.Physics.Arcade.StaticGroup;
   /** Timestamp em que a ventania para de sustentar o jogador. */
   private flightUntil = 0;
   /** Anda para a última bandeira tocada. */
@@ -58,14 +60,6 @@ export class LevelScene extends Phaser.Scene {
   }
 
   create(): void {
-    // create() roda de novo em scene.restart(); sem isto os painéis duplicam.
-    this.panels.length = 0;
-    this.bridges.clear();
-    this.blocks.clear();
-    this.digits.length = 0;
-    this.checkpoints.length = 0;
-    this.guardians.clear();
-    this.winds.clear();
     this.flightUntil = 0;
     this.finishing = false;
     this.facing = 1;
@@ -77,39 +71,17 @@ export class LevelScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(PALETTE.sky);
     createBackdrop(this, this.level.worldWidth);
 
-    const platforms = this.physics.add.staticGroup();
-    for (const spec of this.level.platforms) this.addPlatform(platforms, spec);
+    this.platforms = this.physics.add.staticGroup();
+    for (const spec of this.level.platforms) this.addPlatform(this.platforms, spec);
 
-    for (const mechanism of this.level.mechanisms) {
-      this.panels.push(
-        new CalcPanel(
-          this,
-          mechanism.id,
-          mechanism.panel.x,
-          mechanism.panel.y,
-          mechanism.kind === 'porta' ? 'porta' : 'painel',
-        ),
-      );
-
-      if (mechanism.kind === 'ponte') {
-        this.bridges.set(mechanism.id, new Bridge(this, platforms, mechanism.platform));
-      } else if (mechanism.kind === 'blocos') {
-        this.blocks.set(mechanism.id, new Blocks(this, platforms, mechanism.origin));
-      } else if (mechanism.kind === 'ventania') {
-        this.winds.set(mechanism.id, new Whirlwind(this, mechanism.origin));
-      }
-    }
-
-    for (const at of this.level.checkpoints) this.checkpoints.push(new Checkpoint(this, at));
-    // Guardiões só existem no modo Aventura — é o botão da tela de título.
-    if (useGameStore.getState().mode === 'aventura') {
-      for (const spec of this.level.guardians) {
-        this.guardians.set(spec.id, new Guardian(this, spec.id, spec.at));
-      }
-    }
-    this.level.digits.forEach((at, index) => {
-      this.digits.push(new GoldenDigit(this, at, String(index + 1)));
-    });
+    const parts = buildLevel(this, this.level, useGameStore.getState().mode, this.platforms);
+    this.panels = parts.panels;
+    this.bridges = parts.bridges;
+    this.blocks = parts.blocks;
+    this.winds = parts.winds;
+    this.guardians = parts.guardians;
+    this.digits = parts.digits;
+    this.flags = parts.flags;
 
     this.characterId = useGameStore.getState().character;
     const textureKey = ensurePlayerAnims(this, this.characterId);
@@ -124,7 +96,7 @@ export class LevelScene extends Phaser.Scene {
     this.wings = this.add.sprite(spawn.x, spawn.y, ensureWingAnims(this), 'up');
     this.wings.setVisible(false);
     this.wings.setDepth(1);
-    this.physics.add.collider(this.player, platforms);
+    this.physics.add.collider(this.player, this.platforms);
 
     this.physics.world.setBounds(0, 0, worldWidth, GAME_SIZE.height);
     this.cameras.main.setBounds(0, 0, worldWidth, GAME_SIZE.height);
@@ -304,7 +276,7 @@ export class LevelScene extends Phaser.Scene {
       }
     }
 
-    for (const flag of this.checkpoints) {
+    for (const flag of this.flags) {
       if (flag.tryActivate(this.player.x, this.player.y)) {
         playSfx('bandeira');
         burst(this, flag.at.x, flag.at.y - 20, toPhaserColor(PALETTE.cyan), 12);
