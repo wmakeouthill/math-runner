@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { GameState, LevelId, LevelResult } from './useGameStore.types';
+import type { Op, Tier } from '@/game/math/mathEngine.types';
+import { nextTier } from '@/game/math/tier';
 
 const FIRST_LEVEL: LevelId = '1-1';
+const START_TIER: Record<Op, Tier> = { '+': 1, '-': 1, '*': 1, '/': 1 };
+const NO_STREAK: Record<Op, number> = { '+': 0, '-': 0, '*': 0, '/': 0 };
 
 function previousLevel(id: LevelId): LevelId | null {
   const [world, index] = id.split('-').map(Number);
@@ -52,6 +56,24 @@ export const useGameStore = create<GameState>()(
       muted: false,
 
       toggleMuted: () => set((state) => ({ muted: !state.muted })),
+
+      playerTier: { ...START_TIER },
+      streak: { ...NO_STREAK },
+
+      recordAnswer: (op, correct) =>
+        set((state) => {
+          const atual = state.streak[op];
+          // Acertar zera a sequência de erros, e vice-versa.
+          const streak = correct ? Math.max(1, atual + 1) : Math.min(-1, atual - 1);
+          const tier = nextTier(state.playerTier[op], streak);
+          // Mudou de nível? A sequência recomeça, senão ele sobe de dois em dois.
+          const zera = tier !== state.playerTier[op];
+
+          return {
+            playerTier: { ...state.playerTier, [op]: tier },
+            streak: { ...state.streak, [op]: zera ? 0 : streak },
+          };
+        }),
     }),
     {
       name: 'math-runner-progress',
@@ -61,6 +83,7 @@ export const useGameStore = create<GameState>()(
         character: state.character,
         mode: state.mode,
         muted: state.muted,
+        playerTier: state.playerTier,
       }),
     },
   ),

@@ -1,3 +1,5 @@
+import type { Op, Tier } from '@/game/math/mathEngine.types';
+
 export type LevelId = string;
 
 export type Screen = 'title' | 'select' | 'game';
@@ -29,4 +31,9 @@ export type GameState = {
   resetProgress: () => void;
   muted: boolean;
   toggleMuted: () => void;
+  /** Nível atual do aluno em cada operação. Sobe e desce sozinho. */
+  playerTier: Record<Op, Tier>;
+  /** Acertos seguidos (positivo) ou erros seguidos (negativo) por operação. */
+  streak: Record<Op, number>;
+  recordAnswer: (op: Op, correct: boolean) => void;
 };

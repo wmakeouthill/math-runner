@@ -12,6 +12,7 @@ import { Blocks } from '@/game/mechanisms/Blocks';
 import { GoldenDigit } from '@/game/mechanisms/GoldenDigit';
 import { Checkpoint } from '@/game/mechanisms/Checkpoint';
 import { generateQuestion } from '@/game/math/mathEngine';
+import type { Tier } from '@/game/math/mathEngine.types';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
 import { useGameStore } from '@/store/useGameStore';
 import { useRunStore } from '@/store/useRunStore';
@@ -142,6 +143,10 @@ export class LevelScene extends Phaser.Scene {
   }
 
   private applyOutcome(outcome: ChallengeOutcome): void {
+    // Sobe para o topo: errar também mexe no nível do aluno.
+    const mechanism = this.level.mechanisms.find((item) => item.id === outcome.source);
+    if (mechanism) useGameStore.getState().recordAnswer(mechanism.op, outcome.correct);
+
     if (!outcome.correct) {
       playSfx('errado');
       this.cameras.main.shake(140, 0.005);
@@ -153,7 +158,6 @@ export class LevelScene extends Phaser.Scene {
 
     // Mecanismo primeiro: se o setText do painel explodir numa cena
     // destruída, a ponte da cena viva ainda precisa descer.
-    const mechanism = this.level.mechanisms.find((item) => item.id === outcome.source);
     switch (mechanism?.kind) {
       case 'ponte':
         playSfx('ponte');
@@ -210,9 +214,11 @@ export class LevelScene extends Phaser.Scene {
     const mechanism = this.level.mechanisms.find((item) => item.id === panel.source);
     if (!mechanism) return;
 
-    useChallengeStore
-      .getState()
-      .open(mechanism.id, generateQuestion(mechanism.op, mechanism.tier));
+    const { playerTier } = useGameStore.getState();
+    // O tier da fase é o piso; quem já domina a operação recebe conta maior.
+    const tier = Math.max(mechanism.tier, playerTier[mechanism.op]) as Tier;
+
+    useChallengeStore.getState().open(mechanism.id, generateQuestion(mechanism.op, tier));
   }
 
   override update(_time: number, delta: number): void {
