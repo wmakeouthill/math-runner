@@ -4,8 +4,8 @@ import { JumpController } from '@/game/systems/JumpController';
 import { InputSystem } from '@/game/systems/InputSystem';
 import { LEVEL_1_1 } from '@/game/levels/level-1-1';
 import type { PlatformSpec } from '@/game/levels/reach';
-
-const PLAYER_TEXTURE = 'player-rect';
+import { ensureCharacterTexture } from '@/game/art/characterTexture';
+import { useGameStore } from '@/store/useGameStore';
 
 export class LevelScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -18,15 +18,15 @@ export class LevelScene extends Phaser.Scene {
 
   create(): void {
     this.cameras.main.setBackgroundColor('#0b1020');
-    this.ensurePlayerTexture();
 
     const platforms = this.physics.add.staticGroup();
     for (const spec of LEVEL_1_1.platforms) this.addPlatform(platforms, spec);
 
+    const textureKey = ensureCharacterTexture(this, useGameStore.getState().character);
+
     const { spawn, worldWidth } = LEVEL_1_1;
-    this.player = this.physics.add.sprite(spawn.x, spawn.y, PLAYER_TEXTURE);
+    this.player = this.physics.add.sprite(spawn.x, spawn.y, textureKey);
     this.player.setDisplaySize(32, 48);
-    this.player.setTintFill(0x6ee7ff);
     this.player.setCollideWorldBounds(false);
     this.physics.add.collider(this.player, platforms);
 
@@ -77,16 +77,6 @@ export class LevelScene extends Phaser.Scene {
     if (this.player.y > GAME_SIZE.height + 200) this.respawn();
 
     this.controls.endFrame();
-  }
-
-  private ensurePlayerTexture(): void {
-    if (this.textures.exists(PLAYER_TEXTURE)) return;
-    const texture = this.textures.createCanvas(PLAYER_TEXTURE, 32, 48);
-    if (!texture) return;
-    const context = texture.getContext();
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, 32, 48);
-    texture.refresh();
   }
 
   private respawn(): void {
