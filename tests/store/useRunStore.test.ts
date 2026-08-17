@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { starsFor, useRunStore } from '@/store/useRunStore';
+import { MAX_HEARTS, starsFor, useRunStore } from '@/store/useRunStore';
 import { useGameStore } from '@/store/useGameStore';
 
 describe('starsFor', () => {
@@ -63,5 +63,55 @@ describe('partida', () => {
     useRunStore.getState().begin('1-1', 0);
     useRunStore.getState().finish();
     expect(useGameStore.getState().isUnlocked('1-2')).toBe(true);
+  });
+});
+
+describe('corações do modo Aventura', () => {
+  beforeEach(() => {
+    useRunStore.getState().clear();
+  });
+
+  it('a partida começa com os três corações', () => {
+    useRunStore.getState().begin('1-2', 4);
+    expect(useRunStore.getState().hearts).toBe(MAX_HEARTS);
+  });
+
+  /**
+   * O booleano é o que decide se o jogador volta para a bandeira. Enquanto
+   * sobrar coração ele continua de pé; no último, a cena precisa saber.
+   */
+  it('sobrando coração, a resposta é que dá para continuar', () => {
+    useRunStore.getState().begin('1-2', 0);
+    expect(useRunStore.getState().loseHeart()).toBe(true);
+    expect(useRunStore.getState().loseHeart()).toBe(true);
+    expect(useRunStore.getState().hearts).toBe(1);
+  });
+
+  it('o terceiro erro seguido zera e avisa a cena', () => {
+    useRunStore.getState().begin('1-2', 0);
+    useRunStore.getState().loseHeart();
+    useRunStore.getState().loseHeart();
+    expect(useRunStore.getState().loseHeart()).toBe(false);
+    expect(useRunStore.getState().hearts).toBe(0);
+  });
+
+  it('errar de novo no zero não deixa o coração negativo', () => {
+    useRunStore.getState().begin('1-2', 0);
+    for (let i = 0; i < 5; i += 1) useRunStore.getState().loseHeart();
+    expect(useRunStore.getState().hearts).toBe(0);
+  });
+
+  it('voltar para a bandeira devolve os corações cheios', () => {
+    useRunStore.getState().begin('1-2', 0);
+    useRunStore.getState().loseHeart();
+    useRunStore.getState().refillHearts();
+    expect(useRunStore.getState().hearts).toBe(MAX_HEARTS);
+  });
+
+  it('uma fase nova não herda os corações da anterior', () => {
+    useRunStore.getState().begin('1-2', 0);
+    useRunStore.getState().loseHeart();
+    useRunStore.getState().begin('1-3', 0);
+    expect(useRunStore.getState().hearts).toBe(MAX_HEARTS);
   });
 });
