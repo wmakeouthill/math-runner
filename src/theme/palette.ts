@@ -38,6 +38,15 @@ export const PALETTE = {
   skinJunior: '#e0ac69',
   hairAna: '#2b1b12',
   hairJunior: '#3d2a1c',
+
+  // Folclore (SPEC 4b)
+  cucaGreen: '#6f9c3a',
+  cucaHair: '#e8b23a',
+  boitataFire: '#ff7a2f',
+  boitataGlow: '#ffd166',
+  botoPink: '#f08fb0',
+  curupiraHair: '#e4472c',
+  curupiraSkin: '#b5763f',
 } as const;
 
 export type ColorName = keyof typeof PALETTE;

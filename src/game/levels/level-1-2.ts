@@ -50,5 +50,5 @@ export const LEVEL_1_2: LevelSpec = {
     { x: 2200, y: 430 },
   ],
   checkpoints: [{ x: 1050, y: 300 }],
-  guardians: [{ id: 'saci-1-2', at: { x: 1450, y: 300 }, op: '+', tier: 1 }],
+  guardians: [{ id: 'saci-1-2', kind: 'saci', at: { x: 1450, y: 300 }, op: '+', tier: 1 }],
 };

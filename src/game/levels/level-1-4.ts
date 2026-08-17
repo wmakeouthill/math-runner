@@ -60,5 +60,9 @@ export const LEVEL_1_4: LevelSpec = {
     { x: 1300, y: 450 },
     { x: 2050, y: 170 },
   ],
-  guardians: [{ id: 'saci-1-4', at: { x: 1500, y: 450 }, op: '-', tier: 1 }],
+  guardians: [
+    { id: 'cuca-1-4', kind: 'cuca', at: { x: 1500, y: 450 }, op: '-', tier: 1 },
+    { id: 'saci-1-4', kind: 'saci', at: { x: 2400, y: 170 }, op: '+', tier: 2, from: 'medio' },
+    { id: 'boitata-1-4', kind: 'boitata', at: { x: 2900, y: 450 }, op: '*', tier: 2, from: 'dificil' },
+  ],
 };

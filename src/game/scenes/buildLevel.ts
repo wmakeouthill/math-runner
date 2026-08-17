@@ -72,7 +72,7 @@ export function buildLevel(
   if (mode === 'aventura') {
     for (const spec of level.guardians) {
       if (!guardianShows(spec.from, difficulty)) continue;
-      parts.guardians.set(spec.id, new Guardian(scene, spec.id, spec.at));
+      parts.guardians.set(spec.id, new Guardian(scene, spec.id, spec.at, spec.kind));
     }
   }
 

@@ -60,7 +60,9 @@ export const LEVEL_1_3: LevelSpec = {
     { x: 2500, y: 450 },
   ],
   guardians: [
-    { id: 'saci-1-3', at: { x: 1300, y: 450 }, op: '*', tier: 1 },
-    { id: 'saci-1-3b', at: { x: 2100, y: 300 }, op: '/', tier: 1 },
+    // saiu de 1300: lá ele ficava em cima do painel dos blocos, os dois
+    // desenhados no mesmo ponto. 1420 ainda está no chão do meio (1000 … 1500).
+    { id: 'boitata-1-3', kind: 'boitata', at: { x: 1420, y: 450 }, op: '*', tier: 1 },
+    { id: 'boto-1-3', kind: 'boto', at: { x: 2100, y: 300 }, op: '/', tier: 1, from: 'medio' },
   ],
 };

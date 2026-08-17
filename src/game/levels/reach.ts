@@ -1,6 +1,7 @@
 import { GAME_FEEL } from '@/game/constants';
 import type { Op, Tier } from '@/game/math/mathEngine.types';
 import type { Difficulty } from '@/game/math/difficulty';
+import type { FolkKind } from '@/game/art/folklore';
 
 export type PlatformSpec = {
   x: number;
@@ -24,6 +25,7 @@ export type MechanismEffect =
 
 export type GuardianSpec = {
   id: string;
+  kind: FolkKind;
   /** Onde ele espera. Fica em cima de uma plataforma, como o painel. */
   at: Point;
   op: Op;
