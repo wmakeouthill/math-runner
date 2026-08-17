@@ -85,4 +85,17 @@ export const styles = {
     borderRadius: '999px',
     cursor: 'pointer',
   },
+  confetti: {
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+  },
+  flake: {
+    position: 'absolute',
+    top: '-12px',
+    width: '9px',
+    height: '14px',
+    borderRadius: '2px',
+  },
 } satisfies Record<string, CSSProperties>;

@@ -2,9 +2,17 @@ import { useGameStore } from '@/store/useGameStore';
 import { useRunStore } from '@/store/useRunStore';
 import { levelById, nextLevelId } from '@/game/levels';
 import { formatTime } from '@/app/time';
+import { PALETTE } from '@/theme/palette';
 import { styles } from './Result.styles';
 
 const STAR_SLOTS = [0, 1, 2];
+
+const CONFETTI = Array.from({ length: 26 }, (_, i) => ({
+  left: `${(i * 37) % 100}%`,
+  delay: `${(i % 9) * 0.16}s`,
+  duration: `${2.2 + (i % 5) * 0.35}s`,
+  color: i % 3 === 0 ? PALETTE.gold : i % 3 === 1 ? PALETTE.cyan : PALETTE.shirt,
+}));
 
 /** O que faltou para a estrela que não veio — some quando as três vieram. */
 function missingHint(digitsTaken: number, digitsTotal: number, errors: number): string | null {
@@ -32,6 +40,19 @@ export function Result() {
 
   return (
     <div style={styles.backdrop}>
+      <div style={styles.confetti} aria-hidden>
+        {CONFETTI.map((flake, index) => (
+          <span
+            key={index}
+            style={{
+              ...styles.flake,
+              left: flake.left,
+              background: flake.color,
+              animation: `cair ${flake.duration} ${flake.delay} linear both`,
+            }}
+          />
+        ))}
+      </div>
       <div style={styles.card}>
         <p style={styles.banner}>FASE COMPLETA!</p>
         <p style={styles.levelName}>{level?.name ?? ''}</p>

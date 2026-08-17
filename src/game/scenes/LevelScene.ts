@@ -37,6 +37,8 @@ export class LevelScene extends Phaser.Scene {
   /** Anda para a última bandeira tocada. */
   private spawnPoint: Point = LEVEL_ORDER[0].spawn;
   private unsubscribe: (() => void) | null = null;
+  /** Entre a porta abrir e o card subir o jogador não controla mais nada. */
+  private finishing = false;
 
   constructor() {
     super('LevelScene');
@@ -49,6 +51,7 @@ export class LevelScene extends Phaser.Scene {
     this.blocks.clear();
     this.digits.length = 0;
     this.checkpoints.length = 0;
+    this.finishing = false;
 
     this.level = levelById(useGameStore.getState().currentLevel) ?? LEVEL_ORDER[0];
     this.spawnPoint = this.level.spawn;
@@ -164,8 +167,7 @@ export class LevelScene extends Phaser.Scene {
         this.blocks.get(mechanism.id)?.raise(outcome.answer);
         break;
       case 'porta':
-        playSfx('porta');
-        this.time.delayedCall(DOOR_MS, () => useRunStore.getState().finish());
+        this.celebrate(mechanism.panel);
         break;
     }
 
@@ -173,6 +175,35 @@ export class LevelScene extends Phaser.Scene {
       if (panel.source === outcome.source) panel.markSolved();
     }
     useChallengeStore.getState().close();
+  }
+
+  /** Câmera fecha na porta, o personagem entra, confete, fanfarra, resultado. */
+  private celebrate(door: Point): void {
+    this.finishing = true;
+    this.player.setVelocity(0, 0);
+    this.player.body.setAllowGravity(false);
+
+    const camera = this.cameras.main;
+    camera.stopFollow();
+    camera.pan(door.x, door.y - 30, 420, 'Sine.easeInOut');
+    camera.zoomTo(1.3, 620, 'Sine.easeInOut');
+
+    this.tweens.add({
+      targets: this.player,
+      x: door.x,
+      y: door.y - 20,
+      alpha: 0,
+      duration: 520,
+      delay: 160,
+      ease: 'Quad.easeIn',
+    });
+
+    this.time.delayedCall(DOOR_MS + 200, () => {
+      burst(this, door.x, door.y - 50, toPhaserColor(PALETTE.gold), 34);
+      burst(this, door.x - 40, door.y - 60, toPhaserColor(PALETTE.cyan), 22);
+      playSfx('fase');
+      useRunStore.getState().finish();
+    });
   }
 
   private openChallenge(panel: CalcPanel): void {
@@ -189,6 +220,7 @@ export class LevelScene extends Phaser.Scene {
 
     // Com a conta aberta, ou a fase já vencida, o mundo para.
     if (
+      this.finishing ||
       useChallengeStore.getState().challenge !== null ||
       useRunStore.getState().result !== null
     ) {
