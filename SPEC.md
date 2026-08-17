@@ -87,14 +87,15 @@ sem esse custo.
 | # | Mecanismo | O que a resposta controla | Mundo |
 |---|---|---|---|
 | 1 | **Ponte levantada** | Desce a ponte sobre o buraco | 1 |
-| 2 | **Blocos-plataforma** | Nascem **N blocos**, N = resposta | 1 |
+| 2 | **Blocos-plataforma** | A fase declara de 2 a 4 degraus; a conta certa levanta a escada | 1 |
 | 3 | **Portão numérico** | Abre o portão | 2 |
 | 4 | **Elevador** | Sobe até a **altura N** | 3 |
 | 5 | **Plataforma temporizada** | Fica sólida por **N segundos** | 4 |
 | 6 | **Porta-chave da fase** | Conta maior, abre a saída | todos |
 
-O mecanismo 2 e o 4 são os que fazem professor levantar a sobrancelha — a
-resposta certa é literalmente medida em blocos/altura na tela. Priorize os dois.
+O mecanismo 2 deixa de derivar o tamanho da resposta: escada que cresce com
+o número fica desproporcional e prende o obstáculo à soma. A conta certa só
+dispara, igual à ponte.
 
 ---
 
@@ -132,21 +133,21 @@ jogador acertar. Sem isso, uma criança que travou no `7 × 8` entra em ciclo
 infinito de dano — que é exatamente o oposto do objetivo do jogo. Este é o
 detalhe que separa "educativo" de "castigo".
 
-**Um guardião por mundo, todos do folclore brasileiro.** Não são vilões: são
-figuras travessas que testam quem quer passar — o que combina com o tom do jogo
-e evita monstro assustador numa escola. Folclore é domínio público, então não há
-custo nem licença envolvida.
+**Os cinco do folclore estão no Mundo 1.** Não são vilões: são figuras travessas
+que testam quem quer passar. Folclore é domínio público, então não há custo nem
+licença envolvida.
 
-| Mundo | Guardião | Operação | Como aparece |
-|---|---|---|---|
-| 1 | **Saci-Pererê** | `+` | Chega num redemoinho, apoiado numa perna só, de gorro vermelho |
-| 2 | **Cuca** | `−` | Sai de trás da barraca da feira, resmungando |
-| 3 | **Boitatá** | `×` | Serpente de fogo que se ergue da fogueira da quadrilha |
-| 4 | **Boto-cor-de-rosa** | `÷` | Emerge do rio, de chapéu branco |
-| 5 | **Curupira** (chefe) | 3 contas mistas | Guardião da mata, pés virados para trás |
+| Guardião | Operação | Como aparece |
+|---|---|---|
+| **Saci-Pererê** | `+` | Redemoinho, uma perna só, gorro vermelho |
+| **Cuca** | `−` | Jacaré de cabelo loiro e dente à mostra |
+| **Boitatá** | `×` | Serpente de fogo em anéis |
+| **Boto-cor-de-rosa** | `÷` | Emerge com chapéu branco |
+| **Curupira** (chefe da 1-5) | 3 contas mistas | Pés virados para trás, maior que os outros |
 
-O Curupira pede **3 contas seguidas sem errar**; errar reinicia a sequência mas
-**não** tira coração — o chefe testa constância, não resistência.
+O Curupira cobra **três contas seguidas**. Errar custa um coração e a mesma
+pergunta volta — as rodadas já certas não se perdem. Acertar as três derrota
+o chefe.
 
 Bônus para a defesa do trabalho: o jogo vira interdisciplinar (matemática +
 cultura brasileira) sem custo nenhum de desenvolvimento.
@@ -197,6 +198,17 @@ sem acabamento.
 - ⭐ terminou a fase
 - ⭐ pegou todos os **dígitos dourados** espalhados
 - ⭐ zero erros nas contas
+
+**Dificuldade na tela de título** (convive com a adaptativa por operação):
+
+| | Contas | Corações | Monstros por fase |
+|---|---|---|---|
+| **Fácil** | as da fase, ou as que o aluno já domina | 3 | 1 |
+| **Médio** | um nível acima | 3 | 2 |
+| **Difícil** | dois níveis acima | 2 | 3 |
+
+A adaptativa mede o aluno; esta é a escolha dele. `effectiveTier` combina as
+duas. A escolha fica salva.
 
 ---
 
@@ -454,9 +466,10 @@ Cada fase termina com algo jogável — nunca fique 3 dias sem conseguir rodar.
 | 4 | Mecanismo Blocos + dígitos dourados + HUD + checkpoint + três fases | **Feito.** 1-1 a 1-3 jogáveis do começo ao fim |
 | 5 | Áudio, partículas e comemoração de fim de fase | **Feito.** Acertar uma conta faz som e a fase termina com confete |
 | 6 | Dificuldade adaptativa + Guardião Saci | **Feito.** A conta fica mais difícil sozinha e dá pra derrotar um guardião |
-| 7 | Quatro operações + ventania + fases 1-4 e 1-5 | **Feito.** Mundo 1 fechado com cinco fases — versão entregável |
-| 8 | Créditos e tela final do Mundo 1 | Termina a 1-5 e aparece o nome dos alunos |
-| 9 | Deploy VPS + HTTPS + instalação no celular | Instala como app no celular do Junior e da Ana |
+| 7 | Quatro operações + ventania + fases 1-4 e 1-5 | **Feito.** Mundo 1 fechado com cinco fases |
+| 8 | Variedade: cenários, folclore, dificuldade e fases maiores | **Feito.** Cinco cenários, cinco monstros, fácil/médio/difícil |
+| 9 | Créditos e tela final do Mundo 1 | Termina a 1-5 e aparece o nome dos alunos |
+| 10 | Deploy VPS + HTTPS + instalação no celular | Instala como app no celular do Junior e da Ana |
 
 A fase 1 é a mais importante do projeto. Se o pulo estiver bom, o resto é
 conteúdo. Se estiver ruim, nenhuma quantidade de fases salva.
