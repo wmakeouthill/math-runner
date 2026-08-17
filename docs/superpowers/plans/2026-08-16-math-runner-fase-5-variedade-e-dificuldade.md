@@ -26,6 +26,18 @@ sintetizado, partículas, comemoração na porta, dificuldade adaptativa por
 operação, guardião Saci no modo Aventura, ventania na 1-4 e 1-5, quatro
 operações distribuídas. **127 testes, `tsc` limpo, `oxlint` limpo, build ok.**
 
+**Antes de começar, commite o que estiver pendente.** No momento em que este
+plano foi escrito havia trabalho não commitado em `Guardian.ts`, `LevelScene.ts`,
+`palette.ts` e nos arquivos novos de animação do personagem (`playerPose.ts`,
+`wingTexture.ts`, `characterAnims.ts`). A Tarefa 0 reescreve o `create()` da
+`LevelScene` e a Tarefa 3 reescreve o construtor do `Guardian` — começar com
+essas mudanças soltas na árvore mistura os dois trabalhos num diff só e você
+perde a chance de reverter um sem o outro.
+
+O plano já contempla esse trabalho: o Saci desenhado ali é o que a Tarefa 3
+copia para o `folklore.ts`, e `PALETTE.saci` já existe — não crie um segundo
+vermelho para ele.
+
 Existe uma dívida conhecida: `src/game/scenes/LevelScene.ts` está com 359 linhas
 (o teto do projeto é 200) e a montagem do mundo mora toda no `create()`.
 **A Tarefa 0 resolve isso antes de qualquer coisa** — este plano acrescenta
@@ -735,73 +747,129 @@ export const FOLK_NAME: Record<FolkKind, string> = {
 const cor = toPhaserColor;
 
 /**
- * Cada monstro em primitivas do Phaser. O primeiro filho da lista é o que
- * pulsa — a cena usa isso para a animação de espera, então ele vem sempre
- * primeiro.
+ * Um monstro montado: a poeira que fica no chão e a figura que flutua.
+ *
+ * A separação existe porque as duas animam diferente — a figura sobe e desce,
+ * a poeira gira e estica. É a estrutura que o Saci já usa.
  */
-export function drawFolk(scene: Phaser.Scene, kind: FolkKind): Phaser.GameObjects.GameObject[] {
+export type FolkArt = {
+  dust: Phaser.GameObjects.GameObject[];
+  figure: Phaser.GameObjects.Container;
+};
+
+/** Cada monstro em primitivas do Phaser. Nenhum arquivo de imagem. */
+export function drawFolk(scene: Phaser.Scene, kind: FolkKind): FolkArt {
   switch (kind) {
-    case 'saci':
-      return [
-        scene.add.ellipse(0, 16, 44, 14, cor(PALETTE.faint), 0.55),
-        scene.add.rectangle(0, 14, 7, 16, cor(PALETTE.night)),
-        scene.add.ellipse(0, -6, 26, 34, cor(PALETTE.night)),
-        scene.add.triangle(0, -26, 0, 12, 11, -8, 22, 12, cor(PALETTE.saci)),
-        scene.add.rectangle(11, -10, 12, 4, cor(PALETTE.wall)),
-      ];
+    case 'saci': {
+      // Este é o Saci que já está no jogo — copiado do Guardian.ts atual,
+      // shape por shape. Não redesenhe: ele já foi ajustado à mão.
+      const foot = scene.add.ellipse(3, 20, 16, 7, cor(PALETTE.night));
+      const leg = scene.add.rectangle(0, 10, 8, 18, cor(PALETTE.night));
+      const torso = scene.add.ellipse(0, -6, 26, 30, cor(PALETTE.hairJunior));
+      const head = scene.add.circle(0, -24, 11, cor(PALETTE.skinAna));
+      const eyeL = scene.add.rectangle(-4, -26, 3, 3, cor(PALETTE.night));
+      const eyeR = scene.add.rectangle(4, -26, 3, 3, cor(PALETTE.night));
+      const smile = scene.add.rectangle(0, -20, 7, 2, cor(PALETTE.night));
+      const cap = scene.add.triangle(1, -36, 0, 18, 16, -8, 28, 18, cor(PALETTE.saci));
+      const pompom = scene.add.circle(16, -46, 5, cor(PALETTE.shirt));
+      const pipe = scene.add.rectangle(13, -18, 11, 3, cor(PALETTE.wall));
+      const bowl = scene.add.circle(19, -18, 3, cor(PALETTE.steel));
 
-    case 'cuca':
-      return [
-        scene.add.ellipse(0, 18, 48, 14, cor(PALETTE.cucaGreen), 0.4),
-        scene.add.ellipse(0, -2, 34, 40, cor(PALETTE.cucaGreen)),
-        // focinho de jacaré
-        scene.add.rectangle(16, -6, 26, 12, cor(PALETTE.cucaGreen)),
-        scene.add.ellipse(-6, -30, 40, 22, cor(PALETTE.cucaHair)),
-        scene.add.circle(10, -16, 4, cor(PALETTE.ink)),
-        scene.add.circle(20, -16, 4, cor(PALETTE.ink)),
-      ];
+      return {
+        dust: [
+          scene.add.ellipse(0, 20, 52, 16, cor(PALETTE.faint), 0.5),
+          scene.add.ellipse(0, 22, 34, 10, cor(PALETTE.dirt), 0.55),
+        ],
+        figure: scene.add.container(0, 0, [
+          leg, foot, torso, head, eyeL, eyeR, smile, cap, pompom, pipe, bowl,
+        ]),
+      };
+    }
 
-    case 'boitata':
-      return [
-        scene.add.ellipse(0, 10, 60, 26, cor(PALETTE.boitataGlow), 0.35),
-        // corpo de cobra, três anéis
-        scene.add.ellipse(-14, 6, 30, 18, cor(PALETTE.boitataFire)),
-        scene.add.ellipse(4, -6, 30, 18, cor(PALETTE.boitataFire)),
-        scene.add.ellipse(18, -20, 26, 16, cor(PALETTE.boitataFire)),
-        scene.add.circle(24, -24, 3.5, cor(PALETTE.boitataGlow)),
-      ];
+    case 'cuca': {
+      const corpo = scene.add.ellipse(0, -2, 34, 40, cor(PALETTE.cucaGreen));
+      const focinho = scene.add.rectangle(16, -6, 26, 12, cor(PALETTE.cucaGreen));
+      const dente = scene.add.triangle(22, -1, 0, -4, 5, -4, 2, 3, cor(PALETTE.shirt));
+      const cabelo = scene.add.ellipse(-6, -30, 40, 22, cor(PALETTE.cucaHair));
+      const olhoL = scene.add.circle(8, -18, 4, cor(PALETTE.ink));
+      const olhoR = scene.add.circle(19, -18, 4, cor(PALETTE.ink));
+      const garra = scene.add.rectangle(-16, 12, 10, 6, cor(PALETTE.cucaGreen));
 
-    case 'boto':
-      return [
-        scene.add.ellipse(0, 18, 52, 12, cor(PALETTE.cyan), 0.3),
-        scene.add.ellipse(0, -4, 46, 26, cor(PALETTE.botoPink)),
-        // bico
-        scene.add.triangle(24, -2, 0, -6, 18, 0, 0, 6, cor(PALETTE.botoPink)),
-        // o chapéu da lenda
-        scene.add.rectangle(-4, -22, 30, 5, cor(PALETTE.wall)),
-        scene.add.rectangle(-4, -29, 18, 12, cor(PALETTE.wall)),
-        scene.add.circle(12, -6, 3, cor(PALETTE.night)),
-      ];
+      return {
+        dust: [scene.add.ellipse(0, 20, 48, 14, cor(PALETTE.cucaGreen), 0.35)],
+        figure: scene.add.container(0, 0, [corpo, garra, focinho, dente, cabelo, olhoL, olhoR]),
+      };
+    }
 
-    case 'curupira':
-      return [
-        scene.add.ellipse(0, 22, 56, 14, cor(PALETTE.grassDark), 0.45),
-        // pés virados para trás — é a marca dele
-        scene.add.triangle(-12, 18, 0, 0, 16, 0, 16, -8, cor(PALETTE.curupiraSkin)),
-        scene.add.triangle(12, 18, 0, 0, -16, 0, -16, -8, cor(PALETTE.curupiraSkin)),
-        scene.add.ellipse(0, -2, 32, 42, cor(PALETTE.curupiraSkin)),
-        scene.add.circle(0, -30, 20, cor(PALETTE.curupiraHair)),
-        scene.add.circle(-7, -26, 3.5, cor(PALETTE.ink)),
-        scene.add.circle(7, -26, 3.5, cor(PALETTE.ink)),
-      ];
+    case 'boitata': {
+      // cobra de fogo: três anéis subindo, a cabeça no topo
+      const anelA = scene.add.ellipse(-14, 8, 30, 18, cor(PALETTE.boitataFire));
+      const anelB = scene.add.ellipse(4, -6, 30, 18, cor(PALETTE.boitataFire));
+      const cabeca = scene.add.ellipse(18, -22, 28, 17, cor(PALETTE.boitataFire));
+      const chama = scene.add.triangle(18, -36, 0, 10, 7, -10, 14, 10, cor(PALETTE.boitataGlow));
+      const olho = scene.add.circle(26, -24, 3.5, cor(PALETTE.ink));
+
+      return {
+        dust: [scene.add.ellipse(0, 20, 60, 18, cor(PALETTE.boitataGlow), 0.4)],
+        figure: scene.add.container(0, 0, [anelA, anelB, cabeca, chama, olho]),
+      };
+    }
+
+    case 'boto': {
+      const corpo = scene.add.ellipse(0, -4, 46, 26, cor(PALETTE.botoPink));
+      const bico = scene.add.triangle(26, -2, 0, -5, 18, 0, 0, 5, cor(PALETTE.botoPink));
+      const nadadeira = scene.add.triangle(-4, -20, 0, 8, 9, -9, 18, 8, cor(PALETTE.botoPink));
+      const aba = scene.add.rectangle(-4, -24, 32, 5, cor(PALETTE.wall));
+      const copa = scene.add.rectangle(-4, -32, 18, 13, cor(PALETTE.wall));
+      const olho = scene.add.circle(12, -7, 3, cor(PALETTE.ink));
+
+      return {
+        dust: [scene.add.ellipse(0, 20, 52, 14, cor(PALETTE.cyan), 0.3)],
+        figure: scene.add.container(0, 0, [nadadeira, corpo, bico, aba, copa, olho]),
+      };
+    }
+
+    case 'curupira': {
+      // pés virados para trás — é a marca dele na lenda
+      const peL = scene.add.triangle(-11, 20, 0, 0, 17, 0, 17, -8, cor(PALETTE.curupiraSkin));
+      const peR = scene.add.triangle(11, 20, 0, 0, -17, 0, -17, -8, cor(PALETTE.curupiraSkin));
+      const corpo = scene.add.ellipse(0, -2, 32, 42, cor(PALETTE.curupiraSkin));
+      const cabelo = scene.add.circle(0, -32, 21, cor(PALETTE.curupiraHair));
+      const rosto = scene.add.circle(0, -26, 12, cor(PALETTE.curupiraSkin));
+      const olhoL = scene.add.circle(-5, -28, 3, cor(PALETTE.ink));
+      const olhoR = scene.add.circle(5, -28, 3, cor(PALETTE.ink));
+
+      return {
+        dust: [scene.add.ellipse(0, 22, 62, 16, cor(PALETTE.grassDark), 0.45)],
+        figure: scene.add.container(0, 0, [peL, peR, corpo, cabelo, rosto, olhoL, olhoR]),
+      };
+    }
   }
 }
 ```
 
+> O Curupira é o chefe. O Step 5 o deixa maior que os outros com
+> `figure.setScale(1.35)`, para dar de cara que ele é diferente.
+
 - [ ] **Step 5: O guardião passa a saber quem é**
 
-Em `src/game/mechanisms/Guardian.ts`, o construtor ganha o `kind` e usa o
-desenho. Troque o bloco das primitivas por:
+Em `src/game/mechanisms/Guardian.ts`, o construtor ganha o `kind` e passa a
+pegar o desenho do `folklore.ts` em vez de montar o Saci na mão. **Só o bloco
+das primitivas sai** — as três tweens continuam, exatamente como estão hoje,
+porque `dust[0]`, `dust[1]` e `figure` são os mesmos alvos que `dustA`, `dustB`
+e `figure` eram.
+
+Troque o comentário do topo da classe por:
+
+```ts
+/**
+ * Monstro do folclore que cobra uma conta. Não persegue — fica no lugar e
+ * pergunta para quem chega perto. Guardião que corre atrás vira jogo de
+ * reflexo, e o jogo é de conta.
+ */
+```
+
+e o corpo do construtor por:
 
 ```ts
   readonly kind: FolkKind;
@@ -812,16 +880,37 @@ desenho. Troque o bloco das primitivas por:
     this.at = at;
     this.kind = kind;
 
-    const partes = drawFolk(scene, kind);
-    this.body = scene.add.container(at.x, at.y, partes);
+    const { dust, figure } = drawFolk(scene, kind);
+    // O chefe é maior que os outros — dá para ver de longe que ele é diferente.
+    if (kind === 'curupira') figure.setScale(1.35);
 
-    // O primeiro filho é a sombra/aura de cada monstro: é ele que pulsa.
-    const aura = partes[0];
-    if (aura) {
+    this.body = scene.add.container(at.x, at.y, [...dust, figure]);
+    this.body.setDepth(1);
+
+    scene.tweens.add({
+      targets: figure,
+      y: -6,
+      duration: 520,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+    if (dust[0]) {
       scene.tweens.add({
-        targets: aura,
-        scaleX: 1.25,
-        duration: 620,
+        targets: dust[0],
+        scaleX: 1.3,
+        angle: 180,
+        duration: 700,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+    if (dust[1]) {
+      scene.tweens.add({
+        targets: dust[1],
+        scaleX: 0.7,
+        duration: 480,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
@@ -830,7 +919,8 @@ desenho. Troque o bloco das primitivas por:
   }
 ```
 
-`isBlocking`, `defeat` e `taunt` não mudam.
+`isBlocking` e `defeat` não mudam. No `taunt`, o comentário diz "o Saci
+rodopia" — troque por "o monstro rodopia comemorando".
 
 Em `src/game/levels/reach.ts`, o `GuardianSpec` ganha `kind: FolkKind;`.
 Em `buildLevel.ts`, passe: `new Guardian(scene, spec.id, spec.at, spec.kind)`.
