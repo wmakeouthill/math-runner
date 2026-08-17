@@ -19,6 +19,7 @@ import { useChallengeStore } from '@/store/useChallengeStore';
 import type { ChallengeOutcome } from '@/store/useChallengeStore.types';
 import { shouldHandleOutcome } from './challengeOutcome';
 import { playSfx } from '@/game/audio/audio';
+import { burst } from '@/game/art/spark';
 
 /** Tempo que a porta leva para abrir antes de a tela de resultado subir. */
 const DOOR_MS = 620;
@@ -154,6 +155,9 @@ export class LevelScene extends Phaser.Scene {
       case 'ponte':
         playSfx('ponte');
         this.bridges.get(mechanism.id)?.lower();
+        this.time.delayedCall(560, () =>
+          burst(this, mechanism.platform.x, mechanism.platform.y, toPhaserColor(PALETTE.dirt), 20),
+        );
         break;
       case 'blocos':
         playSfx('blocos');
@@ -196,6 +200,7 @@ export class LevelScene extends Phaser.Scene {
     for (const digit of this.digits) {
       if (digit.tryCollect(this.player.x, this.player.y)) {
         playSfx('moeda');
+        burst(this, digit.at.x, digit.at.y, toPhaserColor(PALETTE.gold), 18);
         useRunStore.getState().takeDigit();
       }
     }
@@ -203,6 +208,7 @@ export class LevelScene extends Phaser.Scene {
     for (const flag of this.checkpoints) {
       if (flag.tryActivate(this.player.x, this.player.y)) {
         playSfx('bandeira');
+        burst(this, flag.at.x, flag.at.y - 20, toPhaserColor(PALETTE.cyan), 12);
         this.spawnPoint = { x: flag.at.x, y: flag.at.y - 40 };
       }
     }

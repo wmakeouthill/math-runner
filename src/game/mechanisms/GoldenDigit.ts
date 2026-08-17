@@ -10,7 +10,7 @@ const PICK_RADIUS = 34;
  */
 export class GoldenDigit {
   private readonly scene: Phaser.Scene;
-  private readonly at: Point;
+  readonly at: Point;
   private readonly body: Phaser.GameObjects.Container;
   private taken = false;
 

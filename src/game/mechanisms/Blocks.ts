@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
 import { blockStair, type Point } from '@/game/levels/reach';
+import { burst } from '@/game/art/spark';
 
 const POP_MS = 220;
 const STAGGER_MS = 90;
@@ -52,6 +53,7 @@ export class Blocks {
         duration: POP_MS,
         delay: index * STAGGER_MS,
         ease: 'Back.easeOut',
+        onComplete: () => burst(this.scene, spec.x, spec.y, toPhaserColor(PALETTE.cyan), 8),
       });
     });
   }
