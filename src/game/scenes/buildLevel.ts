@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { LevelSpec } from '@/game/levels/reach';
 import type { GameMode } from '@/store/useGameStore.types';
+import { guardianShows, type Difficulty } from '@/game/math/difficulty';
 import { CalcPanel } from '@/game/mechanisms/CalcPanel';
 import { Bridge } from '@/game/mechanisms/Bridge';
 import { Blocks } from '@/game/mechanisms/Blocks';
@@ -28,6 +29,7 @@ export function buildLevel(
   scene: Phaser.Scene,
   level: LevelSpec,
   mode: GameMode,
+  difficulty: Difficulty,
   platforms: Phaser.Physics.Arcade.StaticGroup,
 ): LevelParts {
   const parts: LevelParts = {
@@ -69,6 +71,7 @@ export function buildLevel(
   // Guardiões só existem no modo Aventura — é o botão da tela de título.
   if (mode === 'aventura') {
     for (const spec of level.guardians) {
+      if (!guardianShows(spec.from, difficulty)) continue;
       parts.guardians.set(spec.id, new Guardian(scene, spec.id, spec.at));
     }
   }

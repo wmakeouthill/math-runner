@@ -18,7 +18,7 @@ import { Guardian } from '@/game/mechanisms/Guardian';
 import { Whirlwind } from '@/game/mechanisms/Whirlwind';
 import { buildLevel } from './buildLevel';
 import { generateQuestion } from '@/game/math/mathEngine';
-import type { Tier } from '@/game/math/mathEngine.types';
+import { effectiveTier } from '@/game/math/difficulty';
 import { PALETTE, toPhaserColor } from '@/theme/palette';
 import { useGameStore } from '@/store/useGameStore';
 import { useRunStore } from '@/store/useRunStore';
@@ -74,7 +74,13 @@ export class LevelScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     for (const spec of this.level.platforms) this.addPlatform(this.platforms, spec);
 
-    const parts = buildLevel(this, this.level, useGameStore.getState().mode, this.platforms);
+    const parts = buildLevel(
+      this,
+      this.level,
+      useGameStore.getState().mode,
+      useGameStore.getState().difficulty,
+      this.platforms,
+    );
     this.panels = parts.panels;
     this.bridges = parts.bridges;
     this.blocks = parts.blocks;
@@ -246,9 +252,10 @@ export class LevelScene extends Phaser.Scene {
     const mechanism = this.level.mechanisms.find((item) => item.id === panel.source);
     if (!mechanism) return;
 
-    const { playerTier } = useGameStore.getState();
-    // O tier da fase é o piso; quem já domina a operação recebe conta maior.
-    const tier = Math.max(mechanism.tier, playerTier[mechanism.op]) as Tier;
+    const { playerTier, difficulty } = useGameStore.getState();
+    const player = playerTier[mechanism.op];
+    if (player === undefined) return;
+    const tier = effectiveTier(mechanism.tier, player, difficulty);
 
     useChallengeStore.getState().open(mechanism.id, generateQuestion(mechanism.op, tier));
   }
@@ -288,8 +295,10 @@ export class LevelScene extends Phaser.Scene {
       if (!guardian.isBlocking(this.player.x, this.player.y)) continue;
       const spec = this.level.guardians.find((item) => item.id === guardian.id);
       if (!spec) continue;
-      const { playerTier } = useGameStore.getState();
-      const tier = Math.max(spec.tier, playerTier[spec.op]) as Tier;
+      const { playerTier, difficulty } = useGameStore.getState();
+      const player = playerTier[spec.op];
+      if (player === undefined) continue;
+      const tier = effectiveTier(spec.tier, player, difficulty);
       useChallengeStore.getState().open(spec.id, generateQuestion(spec.op, tier));
       break;
     }

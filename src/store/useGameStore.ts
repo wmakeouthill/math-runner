@@ -28,6 +28,7 @@ export const useGameStore = create<GameState>()(
       progress: {},
       character: 'ana',
       mode: 'aventura',
+      difficulty: 'facil',
 
       goToScreen: (screen) => set({ screen }),
 
@@ -50,6 +51,8 @@ export const useGameStore = create<GameState>()(
       setCharacter: (character) => set({ character }),
 
       setMode: (mode) => set({ mode }),
+
+      setDifficulty: (difficulty) => set({ difficulty }),
 
       resetProgress: () => set({ progress: {}, currentLevel: null }),
 
@@ -82,6 +85,7 @@ export const useGameStore = create<GameState>()(
         progress: state.progress,
         character: state.character,
         mode: state.mode,
+        difficulty: state.difficulty,
         muted: state.muted,
         playerTier: state.playerTier,
       }),

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useGameStore } from './useGameStore';
 import type { RunState } from './useRunStore.types';
+import { DIFFICULTY } from '@/game/math/difficulty';
 
 /**
  * Três estrelas, três coisas diferentes (SPEC 4):
@@ -14,7 +15,7 @@ export function starsFor(run: Pick<RunState, 'digitsTaken' | 'digitsTotal' | 'er
   return stars;
 }
 
-export const MAX_HEARTS = 3;
+export const MAX_HEARTS = DIFFICULTY.facil.hearts;
 
 export const useRunStore = create<RunState>()((set, get) => ({
   levelId: null,
@@ -33,7 +34,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
       errors: 0,
       startedAt: Date.now(),
       result: null,
-      hearts: MAX_HEARTS,
+      hearts: DIFFICULTY[useGameStore.getState().difficulty].hearts,
     }),
 
   takeDigit: () => set((state) => ({ digitsTaken: state.digitsTaken + 1 })),
@@ -59,7 +60,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
     return hearts > 0;
   },
 
-  refillHearts: () => set({ hearts: MAX_HEARTS }),
+  refillHearts: () => set({ hearts: DIFFICULTY[useGameStore.getState().difficulty].hearts }),
 
   clear: () =>
     set({
@@ -68,6 +69,6 @@ export const useRunStore = create<RunState>()((set, get) => ({
       digitsTaken: 0,
       errors: 0,
       result: null,
-      hearts: MAX_HEARTS,
+      hearts: DIFFICULTY[useGameStore.getState().difficulty].hearts,
     }),
 }));

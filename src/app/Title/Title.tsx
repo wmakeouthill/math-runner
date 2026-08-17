@@ -1,5 +1,6 @@
 import { useGameStore } from '@/store/useGameStore';
 import type { CharacterId, GameMode } from '@/store/useGameStore.types';
+import { DIFFICULTY, DIFFICULTY_ORDER } from '@/game/math/difficulty';
 import brasaoRj from '@/assets/brasao-rj.png';
 import { Portrait } from '@/app/Portrait/Portrait';
 import { OptionCard } from './OptionCard';
@@ -15,12 +16,20 @@ const MODES: ReadonlyArray<{ id: GameMode; label: string; hint: string }> = [
   { id: 'explorador', label: 'Explorador', hint: 'Só obstáculos, sem perder vida' },
 ];
 
+const DIFFICULTIES = DIFFICULTY_ORDER.map((id) => ({
+  id,
+  label: DIFFICULTY[id].label,
+  hint: DIFFICULTY[id].hint,
+}));
+
 export function Title() {
   const goToScreen = useGameStore((state) => state.goToScreen);
   const character = useGameStore((state) => state.character);
   const setCharacter = useGameStore((state) => state.setCharacter);
   const mode = useGameStore((state) => state.mode);
   const setMode = useGameStore((state) => state.setMode);
+  const difficulty = useGameStore((state) => state.difficulty);
+  const setDifficulty = useGameStore((state) => state.setDifficulty);
 
   return (
     <main style={styles.screen}>
@@ -66,6 +75,19 @@ export function Title() {
               label={option.label}
               hint={option.hint}
               onSelect={() => setMode(option.id)}
+            />
+          ))}
+        </div>
+
+        <p style={styles.label}>DIFICULDADE</p>
+        <div style={styles.row}>
+          {DIFFICULTIES.map((option) => (
+            <OptionCard
+              key={option.id}
+              selected={difficulty === option.id}
+              label={option.label}
+              hint={option.hint}
+              onSelect={() => setDifficulty(option.id)}
             />
           ))}
         </div>

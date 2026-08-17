@@ -1,4 +1,5 @@
 import type { Op, Tier } from '@/game/math/mathEngine.types';
+import type { Difficulty } from '@/game/math/difficulty';
 
 export type LevelId = string;
 
@@ -22,12 +23,14 @@ export type GameState = {
   progress: Record<LevelId, LevelResult>;
   character: CharacterId;
   mode: GameMode;
+  difficulty: Difficulty;
   goToScreen: (screen: Screen) => void;
   startLevel: (id: LevelId) => void;
   completeLevel: (id: LevelId, result: LevelResult) => void;
   isUnlocked: (id: LevelId) => boolean;
   setCharacter: (id: CharacterId) => void;
   setMode: (mode: GameMode) => void;
+  setDifficulty: (difficulty: Difficulty) => void;
   resetProgress: () => void;
   muted: boolean;
   toggleMuted: () => void;

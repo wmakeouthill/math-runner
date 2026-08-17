@@ -1,5 +1,6 @@
 import { GAME_FEEL } from '@/game/constants';
 import type { Op, Tier } from '@/game/math/mathEngine.types';
+import type { Difficulty } from '@/game/math/difficulty';
 
 export type PlatformSpec = {
   x: number;
@@ -27,6 +28,8 @@ export type GuardianSpec = {
   at: Point;
   op: Op;
   tier: Tier;
+  /** A partir de qual dificuldade este monstro aparece. Sem isto, sempre. */
+  from?: Difficulty;
 };
 
 export type MechanismSpec = MechanismEffect & {
