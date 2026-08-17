@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { showsHint, useChallengeStore } from '@/store/useChallengeStore';
 import { OP_LABEL } from '@/game/math/mathEngine';
 import { isIntentionalAnswerClick, useAnswerKeys } from './MathCard.hooks';
+import { shouldBlockAnswerPointer } from '@/platform/interactGesture';
 import { Hint } from './Hint';
 import { styles } from './MathCard.styles';
 
@@ -56,7 +57,7 @@ function AnswerOption({
         downHere.current = false;
       }}
       onClick={(event) => {
-        if (!isIntentionalAnswerClick(event.detail, downHere.current)) return;
+        if (!isIntentionalAnswerClick(event.detail, downHere.current, shouldBlockAnswerPointer())) return;
         downHere.current = false;
         onAnswer(option);
       }}

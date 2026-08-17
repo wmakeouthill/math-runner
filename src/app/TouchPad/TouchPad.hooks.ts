@@ -3,11 +3,13 @@ import { useChallengeStore } from '@/store/useChallengeStore';
 import { useRunStore } from '@/store/useRunStore';
 import { usePadStore } from '@/store/usePadStore';
 import type { PadAction } from '@/store/usePadStore.types';
+import { beginInteractGesture } from '@/platform/interactGesture';
 import { useCoarsePointer } from '@/platform/useCoarsePointer';
 
 function press(event: PointerEvent<HTMLButtonElement>, action: PadAction): void {
   event.preventDefault();
   event.currentTarget.setPointerCapture(event.pointerId);
+  if (action === 'interact') beginInteractGesture(event.pointerId);
   usePadStore.getState().hold(action);
 }
 
