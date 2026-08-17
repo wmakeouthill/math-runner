@@ -3,22 +3,31 @@
 Cole o bloco abaixo no chat do Cursor (modo Agent), com a pasta do projeto
 aberta. Ele executa **uma task por vez** e para para você revisar.
 
-As Fases 0 a 3 já foram implementadas e commitadas, e as três primeiras fases do
-jogo já são jogáveis do começo ao fim. Este prompt entrega a Fase 4.
+As Fases 0 a 4 já foram implementadas e commitadas: as cinco fases do Mundo 1
+são jogáveis do começo ao fim, com som, partículas, comemoração na porta,
+dificuldade adaptativa e guardião no modo Aventura. Este prompt entrega a
+Fase 5, que é a fase de **variedade** — tirar a sensação de que as cinco fases
+são a mesma fase.
 
 ---
 
 ```
-Você vai continuar o jogo Math Runner. As Fases 0 a 3 já estão implementadas e
+Você vai continuar o jogo Math Runner. As Fases 0 a 4 já estão implementadas e
 commitadas neste repositório. Leia estes dois documentos ANTES de escrever
 qualquer linha de código:
 
 1. `SPEC.md` — o design do jogo (o "porquê" de cada decisão)
-2. `docs/superpowers/plans/2026-08-16-math-runner-fase-4-som-efeitos-e-guardiao.md`
+2. `docs/superpowers/plans/2026-08-16-math-runner-fase-5-variedade-e-dificuldade.md`
 
-O plano tem 10 tasks. Execute NA ORDEM — elas dependem umas das outras:
-o `playSfx` da Task 1 é usado da Task 3 em diante, o `burst` da Task 2 aparece
-na 3, 5 e 8, e as fases da Task 9 usam a ventania da Task 8.
+O plano tem 8 tasks, numeradas de 0 a 7. Execute NA ORDEM — elas dependem umas
+das outras:
+
+- a **Task 0** é refatoração e vem primeiro de propósito: ela tira a montagem
+  do mundo de dentro da `LevelScene`, e as Tasks 2 e 3 mexem justamente nessa
+  montagem. Fazer na ordem inversa significa editar um `create()` de 359 linhas.
+- o `effectiveTier` da Task 2 é usado na Task 4
+- o `FolkKind` da Task 3 é usado na Task 4
+- as fases da Task 6 dependem das coordenadas dos monstros da Task 3
 
 ## Como trabalhar
 
@@ -35,7 +44,9 @@ Execute o plano TASK POR TASK, na ordem. Para cada task:
 5. **PARE e me peça revisão.** Não comece a próxima task até eu responder.
 
 O código dentro do plano é para ser usado como está. Ele foi conferido contra a
-base atual, arquivo por arquivo. Não "melhore" enquanto copia.
+base atual, arquivo por arquivo — inclusive as coordenadas das plataformas
+novas, que foram calculadas contra `SAFE_STEP` e `SAFE_GAP`. Não "melhore"
+enquanto copia.
 
 Se um step não funcionar (API diferente, erro de tipo, comando que falha),
 NÃO improvise silenciosamente: pare, me explique o que quebrou e proponha a
@@ -58,22 +69,24 @@ O portão de cada task é: `npx tsc -b` && `npx oxlint src tests` && `npx vitest
   `constructor(private readonly x: number)` não compila. Declare o campo e
   atribua no corpo do construtor.
 - **Sem backend, sem banco, sem login.** Persistência só em `localStorage`.
-- **Nenhuma dependência nova.** A Fase 4 inteira — som, partículas, confete,
-  voo — usa só o que já está no `package.json`. O áudio é sintetizado em
-  WebAudio de propósito: nada de baixar arquivo de som, nada de biblioteca de
-  áudio, nada de tocar som de CDN.
+- **Nenhuma dependência nova.** Os cinco cenários e os cinco monstros do
+  folclore são primitivas do Phaser desenhadas em runtime, de propósito: nada
+  de tileset, nada de spritesheet baixado, nada de asset de CDN. Se você se vir
+  querendo baixar uma imagem, parou de seguir o plano.
+- **Toda cor sai de `src/theme/palette.ts`.** Nunca escreva hex à mão fora
+  dali. O `PALETTE.saci` já existe — não crie um segundo vermelho para ele.
 - Separação de arquivos React: `Component.tsx` / `.styles.ts` / `.hooks.ts` /
   `.types.ts`. Zero lógica dentro do JSX — extraia para hooks.
 - Estado global via Zustand. Não instale TanStack Query (não existe server
   state neste projeto).
 - **Nunca renderize UI dentro do Phaser.** Menus, HUD, card da conta, tela de
-  resultado e botões são React/HTML. Exceção única, já existente: o balão da
-  tecla `E` que flutua acima do Painel de Cálculo é objeto de mundo. Nada além
-  disso — o botão de mudo e os corações são React, no HUD.
+  resultado, corações e o seletor de dificuldade são React/HTML. Exceção única,
+  já existente: o balão da tecla `E` que flutua acima do Painel de Cálculo é
+  objeto de mundo. Nada além disso.
 - Não crie abstração "para o futuro": nada de interface com uma implementação
   só, factory, ou config para valor que nunca muda.
 - Commits em português, um por task, prefixo `feat:` / `test:` / `chore:` /
-  `fix:` / `docs:`.
+  `fix:` / `docs:` / `refactor:`.
 - **Commits sem trailer de coautoria.** Nada de `Co-Authored-By`, `Generated
   with`, emoji de ferramenta ou qualquer assinatura de IA — nem na mensagem de
   commit, nem em comentário de código, nem em README. O trabalho é do Junior e
@@ -87,21 +100,20 @@ O portão de cada task é: `npx tsc -b` && `npx oxlint src tests` && `npx vitest
 - Escola: `Escola Euclides da Cunha — 2026`
 - Personagens jogáveis: `Ana` e `Junior` (são os próprios autores do trabalho)
 - Modos: `Aventura` (com monstros) e `Explorador` (sem monstros)
+- Dificuldades: `Fácil`, `Médio`, `Difícil`
 
 ## Três coisas que você não pode fazer
 
-1. **O brasão é do jogo, desenhado do zero** — é o componente
-   `src/app/Portrait/Crest.tsx`, com escudo, raiz quadrada estilizada e as
-   letras `EC`. Não reproduza, não copie e não se inspire em brasão de governo,
-   de estado ou de secretaria de educação de verdade, e não importe imagem de
-   brasão para dentro do projeto. Se encontrar um `src/assets/brasao-rj.png` ou
-   um `import` dele em `Title.tsx`, **pare e me avise** — não é para estar aí.
+1. **Não mexa na identidade visual do cabeçalho.** O que está em `Title.tsx`
+   hoje é decisão fechada do dono do projeto. Não troque, não substitua por
+   outra imagem, não "padronize" e não importe brasão novo de lugar nenhum.
+   Se algo ali parecer inconsistente, pare e me pergunte.
 
 2. **Não mexa em `GAME_FEEL`.** Os limites de alcance das plataformas
-   (`SAFE_STEP`, `SAFE_GAP`, e agora `FLIGHT_STEP` e `FLIGHT_GAP`) são
-   derivados dele, e as cinco fases foram desenhadas contra esses números.
-   Mudar o pulo desloca todos os limites de uma vez. Se alguma coisa parecer
-   pedir uma calibragem do pulo, pare e me pergunte.
+   (`SAFE_STEP`, `SAFE_GAP`, `FLIGHT_STEP`, `FLIGHT_GAP`) são derivados dele, e
+   as cinco fases foram desenhadas contra esses números — inclusive os trechos
+   novos da Task 6. Mudar o pulo desloca todos os limites de uma vez. Se alguma
+   coisa parecer pedir uma calibragem do pulo, pare e me pergunte.
 
 3. **Não relaxe o teste de alcance para fazer uma fase passar.** Se
    `tests/game/reach.test.ts` reprovar uma fase, quem está errada é a
@@ -111,35 +123,35 @@ O portão de cada task é: `npx tsc -b` && `npx oxlint src tests` && `npx vitest
 
 ## O que importa nesta fase
 
-O entregável é o jogo deixar de ser uma demonstração e virar um jogo: cinco
-fases, som, comemoração no fim, e as quatro operações aparecendo de verdade.
+O problema que a Fase 5 resolve, em uma frase: **as cinco fases parecem a mesma
+fase**. Mesmo cenário nas cinco, mesmo monstro nas cinco, e todas acabam rápido
+demais.
 
-Três coisas do plano que não são detalhe:
+Quatro pontos do plano que não são detalhe:
 
-- **A Task 6 é conserto de bug, não enfeite.** A escada de blocos cresce um
-  bloco por unidade da resposta e hoje não tem teto. Com a dificuldade
-  adaptativa da Task 4 ligada, um `99 + 99` constrói 198 degraus e quase
-  8000 px de escada atravessando a fase. Não pule, e não deixe para depois da
-  Task 4 sem perceber que a Task 4 é justamente o que arma o problema.
+- **A Task 0 é dívida, não enfeite.** `LevelScene.ts` está com 359 linhas e o
+  teto do projeto é 200. É refatoração pura: **nenhum teste pode mudar**. Se
+  você precisar ajustar um teste para ela passar, o corte saiu do lugar errado
+  — pare e me mostre.
 
-- **Errar num mecanismo do cenário continua não punindo.** A conta segue
-  aberta, a tela treme, e no segundo erro seguido a dica em fichas aparece.
-  Só o guardião do modo Aventura tira coração — e perder os três devolve o
-  jogador à bandeira com os corações cheios, nunca ao começo da fase.
+- **A escada de blocos muda de regra na Task 1.** Hoje ela cresce um bloco por
+  unidade da resposta; passa a ser a fase que declara de 2 a 4 degraus, e a
+  conta certa só dispara. Isso apaga `MAX_BLOCK_STEPS` e `MIN_ANSWER` do código
+  e apaga o teste do `MIN_ANSWER` de `mathEngine.test.ts`. **Apagar é parte da
+  task** — não deixe os dois vivos "por segurança".
 
-- **A divisão é sempre exata e nenhuma conta dá resultado negativo.** Já tem
-  teste rodando mil contas de cada combinação. Ao espalhar `−`, `×` e `÷` pelas
-  fases na Task 7, isso não pode regredir.
+- **A dificuldade escolhida e a adaptativa convivem.** A adaptativa mede o
+  aluno, a escolhida é a decisão dele. `effectiveTier` combina as duas e é a
+  ÚNICA porta: nenhum lugar do código pode continuar fazendo
+  `Math.max(spec.tier, playerTier[op])` na mão depois da Task 2. São dois
+  lugares na `LevelScene` — o `openChallenge` e o laço dos guardiões.
 
-## Uma dívida conhecida, para você não me surpreender
+- **Cenário não tem teste que prove que ficou bonito.** A Task 5 é a única com
+  um step de olhar: abra as cinco fases lado a lado e confirme que dá para
+  saber em qual você está sem ler o nome. Se não der, o cenário não ficou
+  pronto, mesmo com o teste verde.
 
-`src/game/scenes/LevelScene.ts` está com 233 linhas e a regra do projeto é 200.
-Este plano faz ele crescer mais (comemoração, guardiões, ventania). Não
-reestruture por conta própria no meio do caminho — mas quando terminar a
-Task 9, me avise e proponha a extração da montagem dos mecanismos para um
-`src/game/scenes/buildLevel.ts`. Aí decidimos juntos.
-
-Comece anunciando a Task 1 e me mostrando o que vai fazer.
+Comece anunciando a Task 0 e me mostrando o que vai fazer.
 ```
 
 ---
@@ -150,16 +162,19 @@ Rode você mesmo antes de aprovar:
 
 ```bash
 npx tsc -b && npx oxlint src tests && npx vitest run && npm run build
+wc -l src/game/scenes/LevelScene.ts
 ```
 
 E confira à mão, com o jogo aberto (`npm run dev`). A lista completa está no
-**Step 4 da Task 10** do plano — áudio, partículas, fim de fase, contas,
-dificuldade adaptativa, ventania, as cinco fases, o guardião e o celular.
+**Step 3 da Task 7** do plano — escada, dificuldade, folclore, cenários,
+tamanho das fases e celular.
 
-Os três itens que eu olharia primeiro, porque são os que provam que a fase
+Os quatro itens que eu olharia primeiro, porque são os que provam que a fase
 funcionou:
 
-- [ ] A tela de fases mostra **cinco** cartões
-- [ ] Na 1-4, acertar a conta abre o redemoinho e dá para **voar** até a laje
-- [ ] Uma resposta grande nos blocos para no oitavo degrau — não atravessa o
-      terraço nem sai da tela
+- [ ] As cinco fases têm céu, chão e enfeite diferentes — dá para saber onde
+      você está sem ler o nome
+- [ ] Aparecem Saci, Cuca, Boitatá e Boto, cada um cobrando a conta dele
+- [ ] No Difícil as contas vêm bem maiores, o HUD mostra 2 corações e aparecem
+      3 monstros por fase
+- [ ] A escada de blocos tem sempre o tamanho do vão, não importa a resposta
