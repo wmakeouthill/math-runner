@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { LEVEL_ORDER } from '@/game/levels';
 import { LEVEL_1_1 } from '@/game/levels/level-1-1';
+import { MIN_ANSWER } from '@/game/math/mathEngine';
 import {
   allPlatforms,
   blockStair,
+  BLOCK,
   canReach,
   horizontalGap,
   pointIsReachable,
@@ -12,6 +14,7 @@ import {
   topOf,
   unreachablePoints,
   JUMP_REACH,
+  MAX_BLOCK_STEPS,
   SAFE_GAP,
   SAFE_STEP,
   type LevelSpec,
@@ -145,5 +148,36 @@ describe('fase 1-1', () => {
 describe('pointIsReachable', () => {
   it('recusa um ponto pendurado no ar, longe de qualquer plataforma', () => {
     expect(pointIsReachable(LEVEL_1_1, { x: 1000, y: 100 })).toBe(false);
+  });
+});
+
+describe('teto da escada de blocos', () => {
+  it('uma resposta enorme não constrói uma escada infinita', () => {
+    expect(blockStair({ x: 0, y: 500 }, 198)).toHaveLength(MAX_BLOCK_STEPS);
+  });
+
+  it('respostas pequenas continuam valendo degrau a degrau', () => {
+    expect(blockStair({ x: 0, y: 500 }, 3)).toHaveLength(3);
+  });
+
+  it('mesmo no teto, cada degrau continua pulável', () => {
+    const steps = blockStair({ x: 0, y: 500 }, 99);
+    expect(BLOCK.stepY).toBeLessThanOrEqual(SAFE_STEP);
+    expect(BLOCK.stepX - BLOCK.size).toBeLessThanOrEqual(SAFE_GAP);
+    expect(steps.length).toBeGreaterThan(1);
+  });
+});
+
+describe.each(LEVEL_ORDER)('fase $id — blocos', (level) => {
+  /**
+   * `-` pode dar 0 e `*` e `/` podem dar 1: escada de zero ou um degrau não
+   * sobe em lugar nenhum. Blocos só aceita operação cuja menor resposta
+   * possível já seja um degrau de verdade.
+   */
+  it('a escada de blocos só usa operação que garante 2 degraus', () => {
+    for (const mechanism of level.mechanisms) {
+      if (mechanism.kind !== 'blocos') continue;
+      expect(MIN_ANSWER[mechanism.op]).toBeGreaterThanOrEqual(2);
+    }
   });
 });
