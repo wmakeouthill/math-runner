@@ -42,6 +42,7 @@ export function isInstallDismissed(storage: Pick<Storage, 'getItem'>): boolean {
   return storage.getItem(INSTALL_DISMISS_KEY) === '1';
 }
 
-export function dismissInstall(storage: Pick<Storage, 'setItem'>): void {
-  storage.setItem(INSTALL_DISMISS_KEY, '1');
+/** O PWA desinstalado deixa o localStorage do site intacto — essa chave tem que sair. */
+export function clearInstallDismiss(storage: Pick<Storage, 'removeItem'>): void {
+  storage.removeItem(INSTALL_DISMISS_KEY);
 }

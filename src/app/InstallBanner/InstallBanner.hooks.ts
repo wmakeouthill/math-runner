@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { isCoarsePointer } from '@/platform/device';
 import { useCoarsePointer } from '@/platform/useCoarsePointer';
 import {
-  dismissInstall,
+  clearInstallDismiss,
   installKind,
-  isInstallDismissed,
   isIosDevice,
   isStandalone,
   readIosStandalone,
@@ -17,8 +16,12 @@ export function useInstallBanner(allowed: boolean) {
   const coarsePointer = useCoarsePointer();
   const [canPrompt, setCanPrompt] = useState(false);
   const [waited, setWaited] = useState(false);
-  const [dismissed, setDismissed] = useState(() => isInstallDismissed(localStorage));
+  const [dismissed, setDismissed] = useState(false);
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+
+  useEffect(() => {
+    clearInstallDismiss(localStorage);
+  }, []);
 
   useEffect(() => {
     const onPrompt = (event: Event) => {
@@ -64,13 +67,11 @@ export function useInstallBanner(allowed: boolean) {
     setPromptEvent(null);
     setCanPrompt(false);
     if (choice.outcome === 'accepted') {
-      dismissInstall(localStorage);
       setDismissed(true);
     }
   };
 
   const dismiss = () => {
-    dismissInstall(localStorage);
     setDismissed(true);
   };
 

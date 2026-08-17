@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  dismissInstall,
+  clearInstallDismiss,
   INSTALL_DISMISS_KEY,
   installKind,
   isInstallDismissed,
@@ -48,8 +48,12 @@ describe('installKind', () => {
     expect(installKind({ ...MOBILE, standalone: true, canPrompt: true })).toBe('none');
   });
 
-  it('quem recusou não vê o banner de novo', () => {
+  it('nesta visita, Agora não esconde o banner', () => {
     expect(installKind({ ...MOBILE, dismissed: true, canPrompt: true })).toBe('none');
+  });
+
+  it('sem recado e sem app instalado, o banner volta', () => {
+    expect(installKind({ ...MOBILE, canPrompt: true, dismissed: false })).toBe('prompt');
   });
 
   it('Android com prompt nativo mostra o botão Instalar', () => {
@@ -70,18 +74,17 @@ describe('installKind', () => {
 });
 
 describe('dismissão do banner', () => {
-  it('grava e lê o recado de agora não', () => {
-    const memory: Record<string, string> = {};
+  it('apaga o recado antigo — desinstalar o PWA não limpa o localStorage do site', () => {
+    const memory: Record<string, string> = { [INSTALL_DISMISS_KEY]: '1' };
     const storage = {
       getItem: (key: string) => memory[key] ?? null,
-      setItem: (key: string, value: string) => {
-        memory[key] = value;
+      removeItem: (key: string) => {
+        delete memory[key];
       },
     };
 
-    expect(isInstallDismissed(storage)).toBe(false);
-    dismissInstall(storage);
-    expect(memory[INSTALL_DISMISS_KEY]).toBe('1');
     expect(isInstallDismissed(storage)).toBe(true);
+    clearInstallDismiss(storage);
+    expect(isInstallDismissed(storage)).toBe(false);
   });
 });
