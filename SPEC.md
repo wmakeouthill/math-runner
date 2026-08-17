@@ -69,9 +69,11 @@ correr/pular  →  caminho bloqueado  →  chegar no Painel de Cálculo
 **monstro** (seção 4b) — os dois usam exatamente o mesmo card de conta. Muda só
 a consequência do erro.
 
-**Interação com o painel:** o jogador encosta e aperta ↑ (ou o botão de ação no
-celular). Abre um card no rodapé da tela (não tela cheia — o cenário continua
-visível atrás, isso mantém a sensação de fluxo). 4 botões grandes de resposta.
+**Interação com o painel:** o jogador encosta e aperta **E** ou **Enter** (ou o
+botão de ação no canto superior direito, no toque). `↑` já é pulo — a mesma
+tecla para as duas coisas abria a conta no meio de um salto. Abre um card no
+rodapé da tela (não tela cheia — o cenário continua visível atrás, isso mantém
+a sensação de fluxo). 4 botões grandes de resposta.
 
 **Por que múltipla escolha e não digitar:** teclado virtual do celular cobre
 metade da tela e leva ~400 ms pra abrir. Mata o ritmo. Nos mundos finais, um
@@ -445,15 +447,16 @@ Cada fase termina com algo jogável — nunca fique 3 dias sem conseguir rodar.
 
 | Fase | Entrega | Pronto quando |
 |---|---|---|
-| 0 | Setup Vite + React + Phaser + PWA | Canvas azul abre no celular |
-| 1 | **Vertical slice**: correr e pular num cenário fixo | O pulo está gostoso (coyote + buffer + variável) |
-| 2 | **Identidade visual**: paleta única, retratos SVG, tela de título, uniforme no jogo, cenário do Quintal | A tela inicial está bonita e o personagem parece o Junior / a Ana |
-| 3 | `mathEngine` + card da conta + mecanismo Ponte | Uma conta abaixa uma ponte de verdade |
-| 4 | Mecanismo Blocos + dígitos dourados + HUD (corações e estrelas) + checkpoint | Fase 1-1 completa, do início ao fim |
-| 5 | **Guardião Saci-Pererê**: confronto, golpe, dano, válvula anti-frustração | Dá pra derrotar um guardião acertando a conta |
-| 6 | Fases 1-2 a 1-5 + áudio + partículas + menu + **cabeçalho/créditos** | **Mundo 1 fechado — versão entregável** |
-| 7 | Deploy VPS + HTTPS + teste de instalação no celular | Instala como app no celular do Junior e da Ana |
-| 8 | *(extra)* Mundos 2–5 + chefe Guardião de Euclides | Só se sobrar tempo |
+| 0 | Setup Vite + React + Phaser + PWA | **Feito.** Canvas azul abre no celular |
+| 1 | **Vertical slice**: correr e pular num cenário fixo | **Feito.** O pulo está gostoso (coyote + buffer + variável) |
+| 2 | **Identidade visual**: paleta única, retratos SVG, tela de título, uniforme no jogo, cenário do Quintal | **Feito.** A tela inicial está bonita e o personagem parece o Junior / a Ana |
+| 3 | `mathEngine` + card da conta + mecanismo Ponte | **Feito.** Uma conta abaixa uma ponte de verdade |
+| 4 | Mecanismo Blocos + dígitos dourados + HUD + checkpoint + três fases | **Feito.** 1-1 a 1-3 jogáveis do começo ao fim |
+| 5 | Áudio, partículas e comemoração de fim de fase | **Feito.** Acertar uma conta faz som e a fase termina com confete |
+| 6 | Dificuldade adaptativa + Guardião Saci | **Feito.** A conta fica mais difícil sozinha e dá pra derrotar um guardião |
+| 7 | Quatro operações + ventania + fases 1-4 e 1-5 | **Feito.** Mundo 1 fechado com cinco fases — versão entregável |
+| 8 | Créditos e tela final do Mundo 1 | Termina a 1-5 e aparece o nome dos alunos |
+| 9 | Deploy VPS + HTTPS + instalação no celular | Instala como app no celular do Junior e da Ana |
 
 A fase 1 é a mais importante do projeto. Se o pulo estiver bom, o resto é
 conteúdo. Se estiver ruim, nenhuma quantidade de fases salva.
