@@ -5,6 +5,8 @@ import { InputSystem } from '@/game/systems/InputSystem';
 import { LEVEL_1_1 } from '@/game/levels/level-1-1';
 import type { PlatformSpec } from '@/game/levels/reach';
 import { ensureCharacterTexture } from '@/game/art/characterTexture';
+import { createBackdrop } from '@/game/art/backdrop';
+import { PALETTE, toPhaserColor } from '@/theme/palette';
 import { useGameStore } from '@/store/useGameStore';
 
 export class LevelScene extends Phaser.Scene {
@@ -17,7 +19,8 @@ export class LevelScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor('#0b1020');
+    this.cameras.main.setBackgroundColor(PALETTE.sky);
+    createBackdrop(this, LEVEL_1_1.worldWidth);
 
     const platforms = this.physics.add.staticGroup();
     for (const spec of LEVEL_1_1.platforms) this.addPlatform(platforms, spec);
@@ -39,19 +42,27 @@ export class LevelScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.controls.destroy());
   }
 
-  /** Retângulo estático simples — sem textura, só cor. */
+  /** Corpo de terra com capim em cima. Só o corpo entra na colisão. */
   private addPlatform(
     group: Phaser.Physics.Arcade.StaticGroup,
     spec: PlatformSpec,
   ): void {
-    const rect = this.add.rectangle(
+    const body = this.add.rectangle(
       spec.x,
       spec.y,
       spec.width,
       spec.height,
-      0x2b3a67,
+      toPhaserColor(PALETTE.dirt),
     );
-    group.add(rect);
+    group.add(body);
+
+    this.add.rectangle(
+      spec.x,
+      spec.y - spec.height / 2 + 4,
+      spec.width,
+      8,
+      toPhaserColor(PALETTE.grass),
+    );
   }
 
   override update(_time: number, delta: number): void {

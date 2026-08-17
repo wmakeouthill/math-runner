@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_FEEL, GAME_SIZE } from './constants';
 import { LevelScene } from './scenes/LevelScene';
+import { PALETTE } from '@/theme/palette';
 
 export function createGameConfig(
   parent: HTMLElement,
@@ -8,7 +9,7 @@ export function createGameConfig(
   return {
     type: Phaser.AUTO,
     parent,
-    backgroundColor: '#0b1020',
+    backgroundColor: PALETTE.sky,
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
