@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { useGameStore } from '@/store/useGameStore';
 import { useRunStore } from '@/store/useRunStore';
 import { levelById, nextLevelId } from '@/game/levels';
 import { formatTime } from '@/app/time';
 import { PALETTE } from '@/theme/palette';
+import { playBgm } from '@/game/audio/audio';
 import { styles } from './Result.styles';
 
 const STAR_SLOTS = [0, 1, 2];
@@ -31,6 +33,12 @@ export function Result() {
   const result = useRunStore((state) => state.result);
   const digitsTaken = useRunStore((state) => state.digitsTaken);
   const digitsTotal = useRunStore((state) => state.digitsTotal);
+
+  useEffect(() => {
+    if (result !== null) {
+      playBgm('victory');
+    }
+  }, [result]);
 
   if (result === null) return null;
 
@@ -81,16 +89,17 @@ export function Result() {
         {hint && <p style={styles.missing}>{hint}</p>}
 
         <div style={styles.actions}>
-          <button type="button" style={styles.secondary} onClick={() => goToScreen('select')}>
+          <button type="button" className="arcade-press" style={styles.secondary} onClick={() => goToScreen('select')}>
             Fases
           </button>
           {proxima ? (
-            <button type="button" style={styles.primary} onClick={() => startLevel(proxima)}>
+            <button type="button" className="arcade-press" style={styles.primary} onClick={() => startLevel(proxima)}>
               Próxima
             </button>
           ) : (
             <button
               type="button"
+              className="arcade-press"
               style={styles.primary}
               onClick={() => levelId && startLevel(levelId)}
             >

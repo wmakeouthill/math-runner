@@ -2,17 +2,76 @@
 
 html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/fonts/press-start-2p.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Silkscreen';
+  src: url('/fonts/silkscreen.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Silkscreen';
+  src: url('/fonts/silkscreen-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   background: #0b1020;
   color: #e8ecff;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family: 'Silkscreen', 'Press Start 2P', ui-monospace, monospace;
+  -webkit-font-smoothing: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 button { font-family: inherit; }
 
-/* Fim de fase: o painel sobe e cada estrela estoura na vez dela. */
+/* Botão de fliperama: sombra dura, recuo no clique. */
+.arcade-press {
+  image-rendering: pixelated;
+  transition: transform 70ms steps(2, end), box-shadow 70ms steps(2, end);
+}
+
+.arcade-press:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.arcade-press:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 var(--navy) !important;
+}
+
+.arcade-press:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.arcade-press:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* JOGAR pisca como "INSERT COIN". */
+.arcade-cta {
+  animation: arcade-blink 1.4s steps(2, end) infinite;
+}
+
+@keyframes arcade-blink {
+  0%, 58% { filter: none; }
+  59%, 100% { filter: brightness(0.78); }
+}
+
 @keyframes subir {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -31,4 +90,5 @@ button { font-family: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 1ms !important; }
+  .arcade-press { transition: none; }
 }

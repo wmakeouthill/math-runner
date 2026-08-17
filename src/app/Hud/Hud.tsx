@@ -43,7 +43,7 @@ export function Hud() {
 
   return (
     <div style={styles.bar}>
-      <button type="button" style={styles.exit} onClick={() => goToScreen('select')}>
+      <button type="button" className="arcade-press" style={styles.exit} onClick={() => goToScreen('select')}>
         ← Fases
       </button>
       <span style={styles.levelName}>{level?.name ?? ''}</span>
@@ -60,6 +60,7 @@ export function Hud() {
       <span style={styles.time}>{formatTime(result?.timeMs ?? elapsed)}</span>
       <button
         type="button"
+        className="arcade-press"
         style={styles.sound}
         aria-label={muted ? 'Ligar o som' : 'Desligar o som'}
         onClick={toggleMuted}

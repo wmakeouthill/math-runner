@@ -15,6 +15,7 @@ export function OptionCard({ selected, label, hint, onSelect, children }: Option
   return (
     <button
       type="button"
+      className="arcade-press"
       aria-pressed={selected}
       onClick={onSelect}
       style={selected ? { ...styles.card, ...styles.cardSelected } : styles.card}

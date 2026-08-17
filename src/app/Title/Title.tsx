@@ -4,6 +4,7 @@ import { DIFFICULTY, DIFFICULTY_ORDER } from '@/game/math/difficulty';
 import brasaoRj from '@/assets/brasao-rj.png';
 import { Portrait } from '@/app/Portrait/Portrait';
 import { OptionCard } from './OptionCard';
+import { useMenuBgm } from '@/app/useMenuBgm';
 import { styles } from './Title.styles';
 
 const CHARACTERS: ReadonlyArray<{ id: CharacterId; label: string }> = [
@@ -23,6 +24,7 @@ const DIFFICULTIES = DIFFICULTY_ORDER.map((id) => ({
 }));
 
 export function Title() {
+  useMenuBgm();
   const goToScreen = useGameStore((state) => state.goToScreen);
   const character = useGameStore((state) => state.character);
   const setCharacter = useGameStore((state) => state.setCharacter);
@@ -49,6 +51,10 @@ export function Title() {
             <span style={styles.school}>Escola Euclides da Cunha — 2026</span>
           </span>
         </div>
+
+        <button type="button" className="arcade-press" style={styles.bonus} onClick={() => goToScreen('bonus')}>
+          Trilhas bônus
+        </button>
       </section>
 
       <section style={styles.choices}>
@@ -92,7 +98,12 @@ export function Title() {
           ))}
         </div>
 
-        <button type="button" style={styles.playButton} onClick={() => goToScreen('select')}>
+        <button
+          type="button"
+          className="arcade-press arcade-cta"
+          style={styles.playButton}
+          onClick={() => goToScreen('select')}
+        >
           JOGAR
         </button>
       </section>

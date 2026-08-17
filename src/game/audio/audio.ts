@@ -46,3 +46,7 @@ export function playSfx(name: SfxName): void {
   if (target === null) return;
   for (const tone of notesFor(name)) schedule(target, tone);
 }
+
+export * from './music/bgm';
+export * from './music/tracks';
+

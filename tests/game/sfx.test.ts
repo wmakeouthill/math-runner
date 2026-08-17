@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { notesFor, SFX_NAMES } from '@/game/audio/sfx';
-import { playSfx } from '@/game/audio/audio';
+import { playBgm, playSfx } from '@/game/audio/audio';
 
 describe('catálogo de efeitos', () => {
   it('todo efeito tem pelo menos uma nota', () => {
@@ -28,5 +28,12 @@ describe('catálogo de efeitos', () => {
 describe('playSfx', () => {
   it('não explode onde não existe AudioContext — é o caso do teste e do SSR', () => {
     expect(() => playSfx('pulo')).not.toThrow();
+  });
+});
+
+describe('playBgm', () => {
+  it('não explode sem AudioContext', () => {
+    expect(() => playBgm('title')).not.toThrow();
+    expect(() => playBgm('quintal')).not.toThrow();
   });
 });

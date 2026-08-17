@@ -1,21 +1,21 @@
 import type { CSSProperties } from 'react';
 import { PALETTE } from '@/theme/palette';
+import { ghostButton, hardShadow, pixelFace } from '@/theme/arcade';
 
 const pill: CSSProperties = {
+  ...pixelFace,
   display: 'flex',
   alignItems: 'center',
   gap: '0.35rem',
-  padding: '0.3rem 0.7rem',
-  fontSize: '0.85rem',
-  fontWeight: 700,
+  padding: '0.28rem 0.55rem',
+  fontSize: '0.72rem',
   color: PALETTE.ink,
-  background: `${PALETTE.night}bb`,
-  border: `1px solid ${PALETTE.steel}`,
-  borderRadius: '999px',
+  background: `${PALETTE.night}cc`,
+  border: `2px solid ${PALETTE.steel}`,
+  borderRadius: 0,
 };
 
 export const styles = {
-  // O HUD flutua sobre o canvas e não pode roubar o clique do jogo.
   bar: {
     position: 'absolute',
     top: 0,
@@ -23,30 +23,34 @@ export const styles = {
     right: 0,
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.6rem 0.8rem',
+    gap: '0.45rem',
+    padding: '0.55rem 0.7rem',
     pointerEvents: 'none',
   },
   levelName: {
     ...pill,
     color: PALETTE.cyan,
-    letterSpacing: '0.04em',
+    maxWidth: '18ch',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   digits: { ...pill, color: PALETTE.gold },
-  hearts: { ...pill, letterSpacing: '0.1em' },
+  hearts: { ...pill, letterSpacing: '0.08em' },
   time: { ...pill, marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' },
   errors: pill,
   exit: {
-    ...pill,
-    padding: '0.3rem 0.6rem',
-    color: PALETTE.mute,
-    cursor: 'pointer',
+    ...ghostButton,
+    padding: '0.45rem 0.55rem',
+    fontSize: '0.42rem',
     pointerEvents: 'auto',
+    boxShadow: hardShadow(PALETTE.night, 3),
   },
   sound: {
-    ...pill,
-    padding: '0.3rem 0.6rem',
-    cursor: 'pointer',
+    ...ghostButton,
+    padding: '0.4rem 0.5rem',
+    fontSize: '0.7rem',
     pointerEvents: 'auto',
+    boxShadow: hardShadow(PALETTE.night, 3),
   },
 } satisfies Record<string, CSSProperties>;

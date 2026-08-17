@@ -85,4 +85,9 @@ describe('useGameStore', () => {
     expect(get().character).toBe('junior');
     expect(get().mode).toBe('explorador');
   });
+
+  it('abre as trilhas bônus a partir do título', () => {
+    get().goToScreen('bonus');
+    expect(get().screen).toBe('bonus');
+  });
 });

@@ -27,7 +27,7 @@ import { useRunStore } from '@/store/useRunStore';
 import { useChallengeStore } from '@/store/useChallengeStore';
 import type { ChallengeOutcome } from '@/store/useChallengeStore.types';
 import { shouldHandleOutcome } from './challengeOutcome';
-import { playSfx } from '@/game/audio/audio';
+import { playSfx, playBgm, stopBgm } from '@/game/audio/audio';
 import { burst } from '@/game/art/spark';
 
 /** Tempo que a porta leva para abrir antes de a tela de resultado subir. */
@@ -126,10 +126,13 @@ export class LevelScene extends Phaser.Scene {
       this.applyOutcome(state.outcome);
     });
 
+    playBgm(this.level.theme);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.controls.destroy();
       this.unsubscribe?.();
       useChallengeStore.getState().close();
+      stopBgm();
     });
   }
 

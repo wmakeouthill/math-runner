@@ -1,11 +1,13 @@
 import { useGameStore } from '@/store/useGameStore';
 import { LEVEL_ORDER } from '@/game/levels';
 import { formatTime } from '@/app/time';
+import { useMenuBgm } from '@/app/useMenuBgm';
 import { styles } from './LevelSelect.styles';
 
 const STAR_SLOTS = [0, 1, 2];
 
 export function LevelSelect() {
+  useMenuBgm();
   const startLevel = useGameStore((state) => state.startLevel);
   const goToScreen = useGameStore((state) => state.goToScreen);
   const isUnlocked = useGameStore((state) => state.isUnlocked);
@@ -25,6 +27,7 @@ export function LevelSelect() {
             <button
               key={level.id}
               type="button"
+              className="arcade-press"
               disabled={!unlocked}
               style={{ ...styles.card, ...(unlocked ? {} : styles.cardLocked) }}
               onClick={() => startLevel(level.id)}
@@ -46,7 +49,7 @@ export function LevelSelect() {
         })}
       </div>
 
-      <button type="button" style={styles.back} onClick={() => goToScreen('title')}>
+      <button type="button" className="arcade-press" style={styles.back} onClick={() => goToScreen('title')}>
         ← Voltar
       </button>
     </main>

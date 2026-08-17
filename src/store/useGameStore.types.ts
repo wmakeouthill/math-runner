@@ -3,7 +3,7 @@ import type { Difficulty } from '@/game/math/difficulty';
 
 export type LevelId = string;
 
-export type Screen = 'title' | 'select' | 'game';
+export type Screen = 'title' | 'select' | 'game' | 'bonus';
 
 /** Os personagens jogáveis são os próprios autores do trabalho. */
 export type CharacterId = 'ana' | 'junior';

@@ -23,7 +23,7 @@ export function MathCard() {
 
       <div style={styles.options}>
         {options.map((option, index) => (
-          <button key={option} type="button" style={styles.option} onClick={() => answer(option)}>
+          <button key={option} type="button" className="arcade-press" style={styles.option} onClick={() => answer(option)}>
             <span style={styles.optionKey}>{index + 1}</span>
             {option}
           </button>

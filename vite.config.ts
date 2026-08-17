@@ -10,7 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,jpg,json,mp3,ogg}'],
+        globPatterns: ['**/*.{js,css,html,png,jpg,json,mp3,ogg,woff2}'],
+        // Gravações de estúdio são bônus sob demanda — não vão no precache.
+        globIgnores: ['**/bonus/**'],
         // O bundle do Phaser passa do limite padrão de 2 MB do Workbox.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },
