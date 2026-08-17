@@ -1,4 +1,5 @@
 import { GAME_FEEL } from '@/game/constants';
+import type { Op, Tier } from '@/game/math/mathEngine.types';
 
 export type PlatformSpec = {
   x: number;
@@ -7,11 +8,28 @@ export type PlatformSpec = {
   height: number;
 };
 
+export type MechanismSpec = {
+  /** Liga painel, resposta e mecanismo. Único dentro da fase. */
+  id: string;
+  op: Op;
+  tier: Tier;
+  /** Onde fica o Painel de Cálculo. */
+  panel: { x: number; y: number };
+  /** A plataforma que o mecanismo entrega quando a conta é respondida certo. */
+  platform: PlatformSpec;
+};
+
 export type LevelSpec = {
   spawn: { x: number; y: number };
   worldWidth: number;
   platforms: readonly PlatformSpec[];
+  mechanisms: readonly MechanismSpec[];
 };
+
+/** Tudo em que dá para pisar depois que os mecanismos foram acionados. */
+export function allPlatforms(level: LevelSpec): readonly PlatformSpec[] {
+  return [...level.platforms, ...level.mechanisms.map((mechanism) => mechanism.platform)];
+}
 
 const airtimeSeconds =
   (2 * Math.abs(GAME_FEEL.jumpVelocity)) / GAME_FEEL.gravityY;
@@ -56,7 +74,7 @@ export function canReach(from: PlatformSpec, to: PlatformSpec): boolean {
 
 /** Índice da plataforma em que o jogador nasce, ou -1 se ele nascer no vácuo. */
 export function spawnPlatformIndex(level: LevelSpec): number {
-  return level.platforms.findIndex(
+  return allPlatforms(level).findIndex(
     (p) => leftOf(p) <= level.spawn.x && level.spawn.x <= rightOf(p),
   );
 }
@@ -66,6 +84,7 @@ export function reachablePlatforms(level: LevelSpec): ReadonlySet<number> {
   const start = spawnPlatformIndex(level);
   if (start === -1) return new Set();
 
+  const platforms = allPlatforms(level);
   const reached = new Set([start]);
   const queue = [start];
 
@@ -73,10 +92,10 @@ export function reachablePlatforms(level: LevelSpec): ReadonlySet<number> {
     const current = queue.pop();
     if (current === undefined) continue;
 
-    const from = level.platforms[current];
+    const from = platforms[current];
     if (!from) continue;
 
-    level.platforms.forEach((to, index) => {
+    platforms.forEach((to, index) => {
       if (reached.has(index) || !canReach(from, to)) return;
       reached.add(index);
       queue.push(index);
@@ -84,4 +103,20 @@ export function reachablePlatforms(level: LevelSpec): ReadonlySet<number> {
   }
 
   return reached;
+}
+
+/**
+ * Um painel fora de alcance é um jogo travado. Ele precisa estar em cima de uma
+ * plataforma que o jogador consegue pisar, e a poucos pixels acima dela.
+ */
+export function panelIsReachable(level: LevelSpec, panel: { x: number; y: number }): boolean {
+  const reached = reachablePlatforms(level);
+
+  return allPlatforms(level).some((platform, index) => {
+    if (!reached.has(index)) return false;
+    if (panel.x < leftOf(platform) || panel.x > rightOf(platform)) return false;
+
+    const above = topOf(platform) - panel.y;
+    return above >= 0 && above <= SAFE_STEP;
+  });
 }

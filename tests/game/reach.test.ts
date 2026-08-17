@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { LEVEL_1_1 } from '@/game/levels/level-1-1';
 import {
+  allPlatforms,
   canReach,
   horizontalGap,
+  panelIsReachable,
   reachablePlatforms,
   spawnPlatformIndex,
   topOf,
@@ -71,12 +73,33 @@ describe('fase 1-1', () => {
     expect(spawnPlatformIndex(LEVEL_1_1)).toBeGreaterThanOrEqual(0);
   });
 
+  /**
+   * O invariante é "alcançável **com os mecanismos acionados**": a plataforma
+   * que a ponte entrega entra na conta. É por isso que `allPlatforms` existe.
+   */
   it('toda plataforma da fase é alcançável a partir do nascimento', () => {
     const alcancadas = reachablePlatforms(LEVEL_1_1);
-    const perdidas = LEVEL_1_1.platforms
-      .map((p, index) => ({ index, topo: topOf(p) }))
+    const perdidas = allPlatforms(LEVEL_1_1)
+      .map((platform, index) => ({ index, topo: topOf(platform) }))
       .filter(({ index }) => !alcancadas.has(index));
 
     expect(perdidas).toEqual([]);
+  });
+
+  it('sem a ponte, o buraco é largo demais para qualquer pulo', () => {
+    const chaoInicial = LEVEL_1_1.platforms[0];
+    const chaoFinal = LEVEL_1_1.platforms[1];
+    expect(chaoInicial).toBeDefined();
+    expect(chaoFinal).toBeDefined();
+    if (!chaoInicial || !chaoFinal) return;
+
+    expect(horizontalGap(chaoInicial, chaoFinal)).toBeGreaterThan(JUMP_REACH.maxDistance);
+  });
+
+  it('todo painel de cálculo dá para alcançar a pé', () => {
+    expect(LEVEL_1_1.mechanisms.length).toBeGreaterThan(0);
+    for (const mechanism of LEVEL_1_1.mechanisms) {
+      expect(panelIsReachable(LEVEL_1_1, mechanism.panel)).toBe(true);
+    }
   });
 });
