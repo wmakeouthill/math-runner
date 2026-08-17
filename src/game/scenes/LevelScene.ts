@@ -5,7 +5,9 @@ import { InputSystem } from '@/game/systems/InputSystem';
 import { levelById, LEVEL_ORDER } from '@/game/levels';
 import type { LevelSpec, PlatformSpec, Point } from '@/game/levels/reach';
 import { FLIGHT } from '@/game/levels/reach';
-import { ensureCharacterTexture } from '@/game/art/characterTexture';
+import { PLAYER_HEIGHT, PLAYER_WIDTH } from '@/game/art/characterTexture';
+import { ensurePlayerAnims, ensureWingAnims, syncPlayerVisuals } from '@/game/art/characterAnims';
+import type { CharacterId } from '@/store/useGameStore.types';
 import { createBackdrop } from '@/game/art/backdrop';
 import { CalcPanel } from '@/game/mechanisms/CalcPanel';
 import { Bridge } from '@/game/mechanisms/Bridge';
@@ -47,6 +49,9 @@ export class LevelScene extends Phaser.Scene {
   private unsubscribe: (() => void) | null = null;
   /** Entre a porta abrir e o card subir o jogador não controla mais nada. */
   private finishing = false;
+  private characterId: CharacterId = 'ana';
+  private facing: 1 | -1 = 1;
+  private wings!: Phaser.GameObjects.Sprite;
 
   constructor() {
     super('LevelScene');
@@ -63,6 +68,7 @@ export class LevelScene extends Phaser.Scene {
     this.winds.clear();
     this.flightUntil = 0;
     this.finishing = false;
+    this.facing = 1;
 
     this.level = levelById(useGameStore.getState().currentLevel) ?? LEVEL_ORDER[0];
     this.spawnPoint = this.level.spawn;
@@ -105,12 +111,19 @@ export class LevelScene extends Phaser.Scene {
       this.digits.push(new GoldenDigit(this, at, String(index + 1)));
     });
 
-    const textureKey = ensureCharacterTexture(this, useGameStore.getState().character);
+    this.characterId = useGameStore.getState().character;
+    const textureKey = ensurePlayerAnims(this, this.characterId);
     const { spawn, worldWidth } = this.level;
 
-    this.player = this.physics.add.sprite(spawn.x, spawn.y, textureKey);
-    this.player.setDisplaySize(32, 48);
+    this.player = this.physics.add.sprite(spawn.x, spawn.y, textureKey, 'idle');
+    this.player.setDisplaySize(PLAYER_WIDTH, PLAYER_HEIGHT);
+    this.player.setSize(PLAYER_WIDTH, PLAYER_HEIGHT);
+    this.player.setDepth(2);
     this.player.setCollideWorldBounds(false);
+
+    this.wings = this.add.sprite(spawn.x, spawn.y, ensureWingAnims(this), 'up');
+    this.wings.setVisible(false);
+    this.wings.setDepth(1);
     this.physics.add.collider(this.player, platforms);
 
     this.physics.world.setBounds(0, 0, worldWidth, GAME_SIZE.height);
@@ -278,6 +291,7 @@ export class LevelScene extends Phaser.Scene {
       useRunStore.getState().result !== null
     ) {
       this.player.setVelocityX(0);
+      this.syncVisuals(false);
       this.controls.endFrame();
       return;
     }
@@ -347,7 +361,24 @@ export class LevelScene extends Phaser.Scene {
 
     if (this.player.y > GAME_SIZE.height + 200) this.respawn();
 
+    this.syncVisuals(this.time.now < this.flightUntil && state.jumpHeld);
     this.controls.endFrame();
+  }
+
+  private syncVisuals(flying: boolean): void {
+    const body = this.player.body;
+    this.facing = syncPlayerVisuals(
+      this.player,
+      this.wings,
+      this.characterId,
+      {
+        grounded: body.blocked.down || body.touching.down,
+        vx: body.velocity.x,
+        vy: body.velocity.y,
+        flying,
+      },
+      this.facing,
+    );
   }
 
   private respawn(): void {

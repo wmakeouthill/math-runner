@@ -23,6 +23,7 @@ export const PALETTE = {
   // Destaques
   cyan: '#6ee7ff',
   gold: '#ffd166',
+  saci: '#d94f3d',
 
   // Quintal da Escola (Mundo 1)
   sky: '#7fc8f8',
